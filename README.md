@@ -1,5 +1,7 @@
 # MentorIA
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23099577.svg)](https://doi.org/10.5281/zenodo.23099577)
+
 Tutor virtual para el **TFG, el TFM o cualquier trabajo académico** de cualquier grado o máster. Aplicación web de un solo fichero que acompaña al estudiante desde su primer interés hasta la defensa, sin escribir el trabajo por él.
 
 **Usar la app:** https://fborrasumh.github.io/mentoria/
@@ -40,7 +42,7 @@ Fernando Borrás Rocher e Irene Martínez Quiles · Universidad Miguel Hernánde
 
 ## Cómo citar
 
-Borrás Rocher, F. y Martínez Quiles, I. (2026). *MentorIA* (v1.0.0) [Software]. Universidad Miguel Hernández de Elche. (DOI en trámite)
+Borrás Rocher, F. y Martínez Quiles, I. (2026). *MentorIA* (v1.0.0) [Software]. Universidad Miguel Hernández de Elche. DOI: [10.5281/zenodo.23099577](https://doi.org/10.5281/zenodo.23099577)
 
 ## Licencia
 
