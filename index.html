@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0F2237">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src https://api.openai.com https://generativelanguage.googleapis.com https://api.anthropic.com https://api.crossref.org; base-uri 'none'; form-action 'none'">
+<meta name="author" content="Fernando Borrás Rocher; Irene Martínez Quiles">
+<meta name="description" content="MentorIA: tutor virtual para TFG, TFM y trabajos académicos de cualquier grado o máster. La IA acompaña, no escribe. Realizada entre Fernando Borrás Rocher e Irene Martínez Quiles (Universidad Miguel Hernández de Elche).">
+<title>MentorIA · Tutor virtual para tu TFG, TFM o trabajo académico</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0F2237; --acero:#2E4B6B; --acero-claro:#7C93AC; --gris:#5D7691;
+  --papel:#F3F6FA; --blanco:#FFFFFF; --linea:#D8E0E9; --linea-2:#E8EEF4;
+  --brasa:#E4572E; --brasa-osc:#C9441F; --brasa-suave:#FDEBE4;
+  --forjado:#0E7C6B; --forjado-suave:#E0F3EE; --aviso:#8A3617;
+  --c-ctx:#1F6FB2; --c-comp:#6B4FD8; --c-rda:#0E8C7A; --c-tema:#C98200; --c-eval:#E4572E; --c-final:#2E4B6B;
+  --sombra:0 1px 0 rgba(15,34,55,.05), 0 14px 34px -22px rgba(15,34,55,.45);
+  --sombra-alta:0 2px 0 rgba(15,34,55,.04), 0 22px 50px -24px rgba(15,34,55,.55);
+  --r:14px;
+  --display:"Bricolage Grotesque",Georgia,serif;
+  --texto:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papel);color:var(--tinta);font-family:var(--texto);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+a{color:var(--acero)}
+:focus-visible{outline:3px solid var(--brasa);outline-offset:2px;border-radius:6px}
+.hidden{display:none!important}
+svg.i{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+code{font-family:var(--mono);font-size:.85em;background:var(--linea-2);padding:1px 5px;border-radius:5px}
+
+/* Barra superior */
+.topbar{position:sticky;top:0;z-index:40;background:var(--tinta);color:#EAF1F7;box-shadow:0 6px 24px -14px rgba(0,0,0,.6)}
+.tb-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px}
+.logo{background:none;border:0;color:#fff;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.03em;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:8px}
+.logo em{font-style:normal;color:var(--brasa)}
+.logo .anv{width:30px;height:30px;border-radius:9px;background:var(--brasa);display:grid;place-items:center;color:#fff}
+.stepper{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}
+.sdot{display:flex;align-items:center;gap:7px;background:none;border:0;color:#8FA7BE;font:600 13px var(--texto);padding:6px;cursor:pointer;border-radius:10px;white-space:nowrap}
+.sdot:disabled{cursor:not-allowed;opacity:.45}
+.sdot .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid #3E5C7D;font-size:12px;color:#A9C0D4;transition:all .2s}
+.sdot .n svg{width:14px;height:14px}
+.sdot[data-state="done"] .n{background:var(--forjado);border-color:var(--forjado);color:#fff}
+.sdot[data-state="now"]{color:#fff}
+.sdot[data-state="now"] .n{background:var(--brasa);border-color:var(--brasa);color:#fff;box-shadow:0 0 0 4px rgba(228,87,46,.25)}
+.sdot:not(:disabled):hover{background:rgba(255,255,255,.06)}
+.sline{flex:0 1 26px;height:2px;background:#2F4A68;min-width:6px}
+.sline.on{background:var(--forjado)}
+.tb-tools{display:flex;gap:6px}
+.tb-btn{background:transparent;border:1px solid #3E5C7D;color:#C9D8E6;border-radius:9px;padding:6px 10px;font:600 13px var(--texto);cursor:pointer;display:flex;align-items:center;gap:6px}
+.tb-btn:hover{border-color:var(--brasa);color:#fff}
+.progress{height:4px;background:#1E3550}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brasa),#F59E0B);transition:width .4s}
+@media(max-width:960px){.sdot .lbl{display:none}.sdot[data-state="now"] .lbl{display:inline}}
+@media(max-width:720px){
+  .tb-in{flex-wrap:wrap;gap:8px}
+  .stepper{order:3;flex-basis:100%;justify-content:space-between}
+  .sdot[data-state="now"] .lbl{display:none}
+  .tb-btn .lbl{display:none}
+}
+
+/* Pantallas */
+main{max-width:1180px;margin:0 auto;padding:26px 16px 40px}
+.screen{display:none}
+.screen.on{display:block}
+@media(prefers-reduced-motion:no-preference){.screen.on{animation:rise .35s cubic-bezier(.2,.7,.3,1) both}@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
+.sh{display:flex;gap:18px;align-items:flex-start;margin:4px 0 22px}
+.sh-ico{width:64px;height:64px;border-radius:18px;background:var(--c,var(--brasa));color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 12px 24px -14px var(--c,var(--brasa))}
+.sh-ico svg{width:32px;height:32px}
+.sh-step{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acero-claro);margin:4px 0}
+.sh h2{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.025em;line-height:1.05;margin:0 0 6px}
+.sh-lede{margin:0;color:var(--gris);font-size:16.5px;max-width:70ch}
+@media(max-width:600px){.sh-ico{width:48px;height:48px;border-radius:14px}.sh-ico svg{width:24px;height:24px}}
+
+.card{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra);padding:20px;margin-bottom:18px}
+.card h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:9px}
+.card h3 .num{width:26px;height:26px;border-radius:8px;background:var(--tinta);color:#fff;font:700 13px var(--mono);display:grid;place-items:center}
+.card .sub{margin:0 0 14px;color:var(--gris);font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px;align-items:start}
+.sticky{position:sticky;top:96px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+label,.lab{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;color:var(--acero)}
+label small,.lab small{font-weight:500;color:var(--acero-claro)}
+input[type=text],input[type=password],input[type=number],textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--linea);border-radius:10px;font-family:var(--texto);font-size:15px;color:var(--tinta);background:#fff;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--acero-claro);box-shadow:0 0 0 4px rgba(124,147,172,.18)}
+input.bad{border-color:var(--brasa);box-shadow:0 0 0 4px rgba(228,87,46,.15)}
+textarea{resize:vertical;min-height:96px;line-height:1.5}
+input::placeholder,textarea::placeholder{color:#9DB0C2}
+.field{margin-bottom:16px}
+.help{font-size:12.8px;color:var(--gris);margin:6px 0 0}
+.help b{color:var(--acero)}
+
+button{font-family:var(--texto);cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;font-weight:600;font-size:15px;border:1.5px solid transparent;padding:11px 18px;transition:transform .08s,background .15s,border-color .15s;text-decoration:none;line-height:1.2}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brasa);color:#fff;box-shadow:0 8px 18px -10px var(--brasa)}
+.btn-primary:hover{background:var(--brasa-osc)}
+.btn-big{font-size:17px;padding:14px 24px;border-radius:13px}
+.btn-dark{background:var(--tinta);color:#fff}
+.btn-dark:hover{background:#1c3656}
+.btn-ghost{background:#fff;border-color:var(--linea);color:var(--acero)}
+.btn-ghost:hover{border-color:var(--acero-claro);background:#F7FAFC}
+.btn-ok{background:var(--forjado);color:#fff}
+.btn-ok:hover{background:#0b6457}
+.btn-word{background:#2B579A;color:#fff}
+.btn-word:hover{background:#1e3f7a}
+.btn-sm{padding:7px 12px;font-size:13.5px;border-radius:9px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:#fff;border:1.5px solid var(--linea);border-radius:999px;padding:7px 13px;font-size:13.5px;color:var(--acero);cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.25;text-align:left}
+.chip:hover{border-color:var(--brasa);color:var(--brasa)}
+.chip[aria-pressed="true"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.chip.mini-ex{font-size:12.5px;padding:4px 10px;border-style:dashed}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--linea);background:#fff;border-radius:9px;padding:7px 11px;font-size:13.5px;font-weight:600;color:var(--acero)}
+.seg button:hover{border-color:var(--acero-claro)}
+.seg button[aria-pressed="true"]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+
+.meto{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.meto button{text-align:left;background:#fff;border:1.5px solid var(--linea);border-radius:12px;padding:10px 12px;color:var(--tinta)}
+.meto button b{display:block;font-size:14px}
+.meto button span{display:block;font-size:12.3px;color:var(--gris);line-height:1.35;margin-top:2px}
+.meto button:hover{border-color:var(--acero-claro)}
+.meto button[aria-pressed="true"]{border-color:var(--tinta);box-shadow:0 0 0 2px var(--tinta);background:var(--papel)}
+
+.tip{display:flex;gap:12px;background:#FFF8E6;border:1px solid #F3DDA0;border-radius:12px;padding:13px 15px;font-size:14px;color:#6B4E00;margin-bottom:18px}
+.tip svg{width:22px;height:22px;color:#C98200;flex:none;margin-top:1px}
+.tip strong{color:#523B00}
+.aviso{background:var(--brasa-suave);border:1px solid #F3C7B5;border-radius:12px;padding:13px 15px;font-size:14px;color:var(--aviso);margin-bottom:16px}
+.okbox{background:var(--forjado-suave);border:1px solid #A9DCCF;border-radius:12px;padding:13px 15px;font-size:14px;color:#0B5A4E;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* Inicio */
+.hero{background:var(--tinta);color:#EAF1F7;border-radius:22px;padding:40px 36px;position:relative;overflow:hidden;margin-bottom:26px;box-shadow:var(--sombra-alta)}
+.hero::before{content:"";position:absolute;right:-80px;top:-80px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(228,87,46,.55),transparent 65%)}
+.hero::after{content:"";position:absolute;left:30%;bottom:-140px;width:420px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(14,140,122,.35),transparent 65%)}
+.hero>*{position:relative;z-index:1}
+@media(max-width:600px){.hero{padding:28px 20px;border-radius:18px}}
+.eyebrow{font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#8FA7BE;margin:0 0 14px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,5.4vw,58px);line-height:.98;letter-spacing:-.035em;margin:0 0 16px;max-width:17ch}
+.hero h1 em{font-style:normal;color:var(--brasa)}
+.hero p.lede{max-width:62ch;font-size:18px;color:#C3D3E2;margin:0 0 24px}
+.hero .actions .btn-ghost{background:transparent;color:#fff;border-color:#4A6787}
+.hero .actions .btn-ghost:hover{border-color:#fff}
+.draft{margin-top:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14.5px}
+.sec-title{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 6px}
+.sec-sub{color:var(--gris);margin:0 0 16px}
+.journey{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.jstop{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:16px;position:relative}
+.jstop .ji{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--c);margin-bottom:10px}
+.jstop .ji svg{width:20px;height:20px}
+.jstop b{display:block;font-size:15px;margin-bottom:2px}
+.jstop span{display:block;font-size:13px;color:var(--gris);line-height:1.45}
+.jstop .jn{position:absolute;top:12px;right:14px;font:700 12px var(--mono);color:var(--acero-claro)}
+@media(max-width:900px){.journey{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.journey{grid-template-columns:1fr}}
+
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.part{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px 14px}
+.part .pi{width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;flex:none}
+.part b{display:block;font-size:14.5px}
+.part span{display:block;font-size:12.8px;color:var(--gris);line-height:1.4}
+
+.examples{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.excard{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--sombra);position:relative;overflow:hidden;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.excard:hover{transform:translateY(-3px);box-shadow:var(--sombra-alta)}
+.excard::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--c)}
+.excard .emo{font-size:32px;line-height:1}
+.excard .area{font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acero-claro)}
+.excard b{font-family:var(--display);font-size:18px;letter-spacing:-.01em;line-height:1.15}
+.excard p{margin:0;font-size:13.5px;color:var(--gris);flex:1}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border-radius:999px;padding:3px 9px;align-self:flex-start}
+
+/* Clave */
+.keyrow{display:flex;gap:8px}
+.keyrow input{flex:1;font-family:var(--mono);font-size:14px}
+.eye{width:46px;flex:none;border:1.5px solid var(--linea);background:#fff;border-radius:10px;color:var(--acero);display:grid;place-items:center}
+.light{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--papel);margin-top:14px;font-size:14.5px;font-weight:600}
+.light .bulbo{width:14px;height:14px;border-radius:50%;background:#B8C5D3;box-shadow:0 0 0 4px rgba(184,197,211,.3);flex:none}
+.light[data-s="ok"] .bulbo{background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.22)}
+.light[data-s="err"] .bulbo{background:var(--brasa);box-shadow:0 0 0 4px rgba(228,87,46,.22)}
+.light[data-s="wait"] .bulbo{background:#F59E0B;box-shadow:0 0 0 4px rgba(245,158,11,.25)}
+.olsteps{list-style:none;padding:0;margin:0;counter-reset:o;display:flex;flex-direction:column;gap:12px}
+.olsteps li{counter-increment:o;display:flex;gap:12px;font-size:14.5px;align-items:flex-start}
+.olsteps li::before{content:counter(o);width:28px;height:28px;border-radius:50%;background:var(--brasa-suave);color:var(--brasa);font:700 13px var(--mono);display:grid;place-items:center;flex:none}
+
+/* Acordeones */
+.acc{background:#fff;border:1px solid var(--linea);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sombra);overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:center;gap:12px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .ai{width:36px;height:36px;border-radius:10px;background:var(--papel);color:var(--acero);display:grid;place-items:center;flex:none}
+.acc[open]>summary .ai{background:var(--tinta);color:#fff}
+.acc>summary b{font-family:var(--display);font-size:17px;display:block}
+.acc>summary small{display:block;color:var(--gris);font-size:13px}
+.acc>summary .chev{margin-left:auto;transition:transform .2s;color:var(--acero-claro)}
+.acc[open]>summary .chev{transform:rotate(180deg)}
+.acc .inner{padding:4px 18px 18px;border-top:1px solid var(--linea-2)}
+.acc .inner>*:first-child{margin-top:14px}
+.prompt-ta{font-family:var(--mono);font-size:12.3px;min-height:130px;background:#FBFDFE}
+
+/* Resumen lateral */
+.sum h3{margin-bottom:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:var(--papel);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font:800 24px var(--display);letter-spacing:-.02em;line-height:1.1}
+.stat span{font-size:12.3px;color:var(--gris)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.checks li{display:flex;gap:9px;align-items:center;color:var(--gris)}
+.checks li .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--linea);display:grid;place-items:center;flex:none}
+.checks li.on{color:var(--tinta)}
+.checks li.on .ck{background:var(--forjado);border-color:var(--forjado);color:#fff}
+.checks li .ck svg{width:12px;height:12px}
+.docname{margin-top:14px;padding:11px 13px;border-radius:11px;background:var(--tinta);color:#C3D3E2;font-size:13.5px}
+.docname b{color:#fff}
+
+/* Generación */
+.agents{display:flex;flex-direction:column;gap:10px}
+.agent{background:#fff;border:1px solid var(--linea);border-radius:var(--r);box-shadow:var(--sombra);overflow:hidden;transition:border-color .2s}
+.agent-h{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
+.agent .ai{width:42px;height:42px;border-radius:12px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;flex:none;transition:all .2s}
+.agent .ai svg{width:20px;height:20px}
+.agent-t{flex:1;min-width:0}
+.agent-t b{display:block;font-family:var(--display);font-size:16.5px}
+.agent-t span{display:block;font-size:13px;color:var(--gris)}
+.pill{font-size:12.5px;font-weight:700;border-radius:999px;padding:4px 10px;background:var(--linea-2);color:var(--gris);white-space:nowrap}
+.agent[data-s="run"]{border-color:#F59E0B}
+.agent[data-s="run"] .ai{background:var(--c);color:#fff;animation:pulse 1s infinite alternate}
+.agent[data-s="run"] .pill{background:#FFF1D6;color:#8A5A00}
+.agent[data-s="ok"] .ai{background:var(--c);color:#fff}
+.agent[data-s="ok"] .pill{background:var(--forjado-suave);color:var(--forjado)}
+.agent[data-s="err"]{border-color:var(--brasa)}
+.agent[data-s="err"] .pill{background:var(--brasa-suave);color:var(--brasa)}
+.agent-b{display:none;padding:4px 18px 16px 72px;font-size:14px;border-top:1px solid var(--linea-2);background:#FBFDFE}
+.agent.open .agent-b{display:block}
+@media(max-width:600px){.agent-b{padding-left:18px}}
+@keyframes pulse{from{transform:scale(1);box-shadow:0 0 0 0 rgba(228,87,46,.5)}to{transform:scale(1.06);box-shadow:0 0 0 10px rgba(228,87,46,0)}}
+.forging{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;background:var(--tinta);color:#fff;margin-bottom:16px}
+.forging .spark{width:44px;height:44px;border-radius:12px;background:var(--brasa);display:grid;place-items:center;flex:none;animation:pulse 1s infinite alternate}
+.forging.done .spark{background:var(--forjado);animation:none}
+.forging.err .spark{animation:none}
+.forging b{font-family:var(--display);font-size:18px;display:block}
+.forging span{font-size:14px;color:#C3D3E2}
+.mini-list{margin:10px 0 0;padding:0;list-style:none}
+.mini-list li{padding:5px 0;border-bottom:1px solid var(--linea-2)}
+.mini-list li:last-child{border-bottom:0}
+.code{display:inline-block;font:700 11px var(--mono);border-radius:5px;padding:1px 6px;margin-right:6px;background:var(--linea-2);color:var(--acero)}
+
+/* Guía */
+.res-head{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.res-head h2{font-family:var(--display);font-weight:800;font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;margin:0;flex:1;min-width:240px;line-height:1.1}
+.doc{background:#fff;border:1px solid var(--linea);border-radius:18px;box-shadow:var(--sombra-alta);padding:40px 44px;max-width:900px;margin:0 auto}
+@media(max-width:700px){.doc{padding:22px 16px}}
+.doc-h{border-bottom:3px solid var(--tinta);padding-bottom:18px;margin-bottom:26px}
+.doc-kind{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--brasa);margin:0 0 6px}
+.doc-h h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.4vw,36px);letter-spacing:-.025em;line-height:1.05;margin:0 0 12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.meta span{font-size:12.8px;font-weight:600;background:var(--papel);color:var(--acero);border-radius:999px;padding:4px 11px}
+.dsec{margin-bottom:28px}
+.dsec h2{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.dsec h2 .num{width:28px;height:28px;border-radius:8px;background:var(--tinta);color:#fff;font:700 13px var(--mono);display:grid;place-items:center;flex:none}
+.dsec p{margin:0 0 10px;max-width:75ch}
+.sublab{font-size:13px;font-weight:700;color:var(--acero-claro);margin:14px 0 6px}
+.row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--linea-2);font-size:14.5px;align-items:flex-start}
+.row:last-child{border-bottom:0}
+.row .code{margin-top:2px;flex:none}
+.code.cg{background:#E6F0FA;color:var(--c-ctx)}
+.code.ce{background:#EEEAFB;color:var(--c-comp)}
+.code.bl{background:var(--forjado-suave);color:var(--forjado)}
+.code.tm{background:var(--tinta);color:#fff}
+.row .hrs{margin-left:auto;font-size:12.5px;color:var(--gris);white-space:nowrap}
+.blk{font-weight:700;margin:16px 0 4px;display:flex;gap:8px;align-items:baseline}
+.blk small{font-weight:500;color:var(--gris)}
+.tbl-wrap{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{background:var(--tinta);color:#fff;text-align:left;padding:9px 11px;font-size:12.5px;font-weight:700}
+table.t td{padding:9px 11px;border-bottom:1px solid var(--linea-2);vertical-align:top}
+table.t tr:nth-child(even) td{background:#FAFCFE}
+.peso{font-weight:800;color:var(--brasa);white-space:nowrap}
+.note{margin-top:12px;padding:11px 14px;background:var(--papel);border-left:4px solid var(--forjado);border-radius:8px;font-size:14px}
+.demo-flag{background:#FFF8E6;border:1px solid #F3DDA0;color:#6B4E00;border-radius:12px;padding:11px 15px;font-size:14px;margin:0 auto 16px;max-width:900px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.demo-flag svg{color:#C98200}
+
+/* Navegación inferior */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--linea)}
+.bn-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.bn-hint{flex:1;text-align:center;font-size:14px;color:var(--gris)}
+.bn-hint b{color:var(--tinta)}
+@media(max-width:600px){.bn-hint{display:none}.bn-in{justify-content:space-between}}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(15,34,55,.55);display:none;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto}
+.modal.on{display:flex}
+.modal-box{background:#fff;border-radius:18px;max-width:760px;width:100%;box-shadow:var(--sombra-alta);overflow:hidden}
+.modal-head{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--tinta);color:#fff}
+.modal-head h2{font-family:var(--display);font-size:22px;margin:0;flex:1}
+.modal-head button{background:transparent;border:1px solid #4A6787;color:#fff;border-radius:9px;padding:6px 10px}
+.modal-body{padding:18px 20px 22px}
+.glos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.glos{grid-template-columns:1fr}}
+.glos div{background:var(--papel);border-radius:12px;padding:12px 14px}
+.glos b{display:block;font-family:var(--display);font-size:16px;margin-bottom:2px}
+.glos span{font-size:13.8px;color:var(--acero)}
+.hist{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--linea);border-radius:12px;margin-bottom:8px}
+.hist-t{flex:1;min-width:0;cursor:pointer}
+.hist-t b{display:block;font-size:15px}
+.hist-t span{font-size:12.8px;color:var(--gris)}
+.hist:hover{border-color:var(--acero-claro)}
+.iconbtn{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--linea);background:#fff;color:var(--acero);display:grid;place-items:center;padding:0}
+.iconbtn:hover{border-color:var(--brasa);color:var(--brasa)}
+.empty{text-align:center;color:var(--gris);padding:30px 10px}
+
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:11px 18px;border-radius:12px;font-size:14.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:70;max-width:90vw;text-align:center;box-shadow:var(--sombra-alta)}
+.toast.on{opacity:1;transform:translateX(-50%)}
+footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;font-size:13px;color:#6E8299}
+footer hr{border:0;border-top:1px solid var(--linea);margin:0 0 14px}
+
+@media print{
+  body{background:#fff;padding:0}
+  .topbar,.bottomnav,.res-head,.demo-flag,.okbox,footer,.toast,.modal{display:none!important}
+  main{padding:0;max-width:none}
+  .screen{display:none!important}
+  
+  .doc{box-shadow:none;border:0;padding:0;max-width:none}
+  .dsec{break-inside:avoid-page}
+  table.t th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+/* ══ v2 ══ */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:960px){.feats{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.feats{grid-template-columns:1fr}}
+.feat{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:16px;border-top:4px solid var(--c)}
+.feat .pi{width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;margin-bottom:10px}
+.feat b{display:block;font-family:var(--display);font-size:17px;margin-bottom:3px}
+.feat span{display:block;font-size:13.5px;color:var(--gris);line-height:1.45}
+.importbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--tinta);color:#EAF1F7;border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+.importbar .pi{width:40px;height:40px;border-radius:11px;background:var(--brasa);display:grid;place-items:center;flex:none}
+.importbar b{display:block;font-size:15px}
+.importbar span{display:block;font-size:13.3px;color:#A9C0D4}
+.importbar .btn-dark{background:#fff;color:var(--tinta)}
+.importbar .btn-dark:hover{background:#EAF1F7}
+.inacc{border-top:1px solid var(--linea-2);margin-top:4px;padding-top:12px}
+.inacc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--acero)}
+.inacc>summary::-webkit-details-marker{display:none}
+.inacc>summary .chev{margin-left:auto;transition:transform .2s;color:var(--acero-claro)}
+.inacc[open]>summary .chev{transform:rotate(180deg)}
+.rec{display:inline-block;font:700 11px var(--texto);background:var(--forjado-suave);color:var(--forjado);border-radius:999px;padding:2px 8px;vertical-align:2px;margin-left:4px}
+.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:560px){.checkgrid{grid-template-columns:1fr}}
+.checkgrid label{display:flex;gap:9px;align-items:center;margin:0;padding:9px 11px;border-radius:10px;background:var(--papel);font-weight:500;color:var(--tinta);cursor:pointer;font-size:14px}
+.checkgrid input{width:18px;height:18px;accent-color:var(--forjado);margin:0}
+.checkgrid label:has(input:checked){background:var(--forjado-suave)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px dashed var(--linea);border-radius:14px;padding:24px;cursor:pointer;color:var(--acero);margin:0;font-weight:500}
+.drop svg{width:30px;height:30px;color:var(--brasa)}
+.drop b{font-size:15px;color:var(--tinta)}
+.drop span{font-size:13px;color:var(--gris)}
+.drop.over,.drop:hover{border-color:var(--brasa);background:var(--brasa-suave)}
+
+
+/* ══ MentorIA ══ */
+.logo .anv{background:linear-gradient(135deg,#0E8C7A,#1F6FB2)}
+.hero{padding:44px 38px 30px}.hero h1{max-width:19ch}.mt-inicio{margin:14px 0 0;font-size:14px;color:#C3D3E2}.mt-inicio:empty{display:none}.mt-inicio b{color:#fff}
+.mt-autores{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14)}.mt-autores-cap{font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:#8FA7BE;width:100%;margin-bottom:-4px}
+.mt-autor{display:flex;gap:11px;align-items:center}.mt-autor b{display:block;color:#fff;font:700 16px var(--display)}.mt-autor small{display:block;color:#9DB6CD;font-size:12.5px}.mt-av{width:44px;height:44px;border-radius:14px;background:var(--c);color:#fff;display:grid;place-items:center;font:800 15px var(--display);flex:none;box-shadow:0 10px 20px -12px var(--c)}.mt-x{font:300 26px var(--display);color:#5D7C9B}.mt-idea{width:100%;margin:2px 0 0;font-size:13px;color:#9DB6CD;max-width:70ch}
+.mt-chip-prog{font:700 12px var(--mono);color:#C3D3E2;background:rgba(255,255,255,.08);border-radius:999px;padding:5px 10px}
+.mt-fases{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.mt-fase{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px}.mt-n{width:28px;height:28px;border-radius:9px;background:var(--tinta);color:#fff;font:700 13px var(--mono);display:grid;place-items:center;flex:none}.mt-fase b{display:block;font-size:15px}.mt-fase small{color:var(--gris);font-size:12.8px}
+.zonas{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.zonas{grid-template-columns:1fr}}.zona{border-radius:16px;padding:14px 16px;border:2px solid}.zona.l{border-color:#9FD9C4;background:var(--forjado-suave)}.zona.n{border-color:#E9C46A;background:#FFF8E6}.zona h4{margin:0 0 6px;font-family:var(--display);font-size:18px}.zona ul{margin:0;padding-left:18px;font-size:14px;line-height:1.7}
+.sec-title+.zonas,.sec-title+.journey,.sec-title+.mt-fases{margin-top:14px}
+.field input[type=text],.field select,.field textarea{width:100%;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;font:15px var(--texto);background:#fff;color:var(--tinta)}.field textarea{line-height:1.55;resize:vertical}.field label{display:block;font:700 13px var(--texto);color:var(--acero);margin-bottom:5px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brasa);box-shadow:0 0 0 3px rgba(228,87,46,.18)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.grid3,.grid2{grid-template-columns:1fr}}
+.card .actions{margin-top:12px}.card h3{margin-top:0}
+.mt-ambitos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.mt-amb{text-align:left;background:#fff;border:2px solid var(--linea);border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:border-color .12s,transform .12s}.mt-amb:hover{border-color:var(--c);transform:translateY(-1px)}.mt-amb.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 8%,#fff);box-shadow:0 10px 24px -16px var(--c)}
+.mt-ai{width:34px;height:34px;border-radius:10px;background:var(--c);color:#fff;display:grid;place-items:center;margin-bottom:4px}.mt-ai svg{width:18px;height:18px}.mt-amb b{font-size:14.5px;line-height:1.25}.mt-amb small{color:var(--gris);font-size:12.5px;line-height:1.35}
+.mt-dec{margin-bottom:12px}.mt-st{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;min-height:0}
+.mt-chip{display:inline-block;font:700 11.5px var(--texto);border-radius:999px;padding:3px 10px;background:var(--linea-2);color:var(--acero)}.mt-chip.ok{background:var(--forjado-suave);color:#0B5A4E}.mt-chip.aviso{background:#FFF1D6;color:#7A4B00}.mt-chip.o-propia{background:#E3F4EE;color:#0B5A4E}.mt-chip.o-ia-editada{background:#FFF1D6;color:#7A4B00}.mt-chip.o-ia-elegida{background:#E8E3FA;color:#4B36A5}
+.mt-out{background:var(--papel);border:1px solid var(--linea);border-radius:14px;padding:14px 16px;margin:12px 0 4px;font-size:14.5px;line-height:1.6}.mt-out h4,.mt-md h4,.mt-h4{font:700 15px var(--display);margin:12px 0 4px;color:var(--tinta)}.mt-out p{margin:0 0 8px}.mt-out ul,.mt-out ol,.mt-md ul,.mt-md ol{margin:0 0 8px;padding-left:20px}
+.mt-prop{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px 14px;margin:8px 0}.mt-prop p{margin:4px 0}.mt-aviso{color:var(--acero)!important;font-size:12.5px!important;margin:6px 0 0!important}
+.mt-rh{display:flex;gap:12px;justify-content:space-between;align-items:baseline;flex-wrap:wrap}.mt-quote{background:var(--papel);border-left:4px solid var(--acero-claro);border-radius:0 10px 10px 0;padding:10px 14px;font:italic 14px/1.55 Georgia,serif;margin:8px 0}.mt-q{font-size:16px;margin:8px 0}
+.mt-md{font-size:14.5px;line-height:1.6}
+.mt-pbar{height:10px;background:var(--linea-2);border-radius:8px;overflow:hidden;margin:6px 0 12px}.mt-pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--forjado),#F59E0B);transition:width .4s}
+.mt-hitos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}.mt-hitos li{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--papel);font-size:14px;color:var(--gris)}.mt-hitos li.ok{background:var(--forjado-suave);color:#0B5A4E;font-weight:600}.mt-hitos li span{width:18px;font-weight:700}
+.mt-bad{color:var(--brasa-osc)!important}
+table{border-collapse:collapse;width:100%;font-size:13.8px}th{background:var(--papel);color:var(--acero);font:700 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;text-align:left}td,th{padding:10px 12px;border-bottom:1px solid var(--linea-2);vertical-align:top}.table-wrap{overflow-x:auto}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--linea);border-top-color:var(--brasa);border-radius:50%;animation:mts .8s linear infinite;vertical-align:-2px}@keyframes mts{to{transform:rotate(360deg)}}
+.mt-fab{position:fixed;right:18px;bottom:88px;z-index:30;display:flex;gap:8px;align-items:center;background:var(--tinta);color:#fff;border:0;border-radius:999px;padding:12px 18px;font:700 14px var(--texto);cursor:pointer;box-shadow:0 12px 30px -10px rgba(15,34,55,.55)}.mt-fab:hover{background:var(--brasa)}.mt-fab svg{width:18px;height:18px}
+.mt-chat{position:fixed;right:18px;bottom:88px;z-index:40;width:min(420px,calc(100vw - 24px));height:min(560px,calc(100vh - 130px));background:#fff;border:1px solid var(--linea);border-radius:18px;box-shadow:0 30px 70px -20px rgba(15,34,55,.5);display:flex;flex-direction:column;overflow:hidden}.mt-chat[hidden]{display:none}
+.mt-chat-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--tinta);color:#fff}.mt-chat-h button{background:none;border:0;color:#fff;font-size:18px;cursor:pointer}
+.mt-chat-b{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--papel)}.mt-chat-f{display:flex;gap:8px;padding:10px;border-top:1px solid var(--linea);background:#fff}.mt-chat-f textarea{flex:1;border:1.5px solid var(--linea);border-radius:10px;padding:8px 10px;font:14px var(--texto);resize:none}
+.mt-msg{border-radius:12px;padding:10px 13px;font-size:14px;line-height:1.55;max-width:92%}.mt-msg.user{align-self:flex-end;background:var(--tinta);color:#fff}.mt-msg.user b{color:#8FA7BE}.mt-msg.assistant{align-self:flex-start;background:#fff;border:1px solid var(--linea)}.mt-msg b{display:block;font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;color:var(--acero-claro)}.mt-msg p{margin:0 0 6px}.mt-msg ul,.mt-msg ol{margin:0 0 6px;padding-left:18px}.mt-vacio{color:var(--gris);font-size:13.5px}
+.mt-foot{max-width:1180px;margin:10px auto 0;padding:0 16px 110px}.mt-foot hr{border:0;border-top:1px solid var(--linea);margin:0 0 16px}.mt-foot p{margin:0;font-size:12.8px;color:#6E8299;max-width:76ch;line-height:1.55}
+.glos div{display:block;margin-bottom:12px}.glos b{display:block}
+#ejNota{margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+@media(max-width:720px){.hero{padding:28px 20px 24px}.mt-fab span{display:none}.mt-fab{padding:13px}}
+/* barra superior con ocho pasos: solo se muestra el nombre del paso actual */
+.tb-in{gap:10px}.stepper{min-width:0;flex:1 1 auto;justify-content:center;gap:2px}.sdot:not([data-state="now"]) .lbl{display:none}.sdot{padding-left:4px;padding-right:4px}.sline{min-width:8px;flex:0 1 22px}
+.logo{flex:none}.tb-tools{flex:none}
+@media(max-width:900px){.mt-chip-prog{display:none}.tb-btn .lbl{display:none}}
+</style></head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></symbol>
+  <symbol id="i-quiz" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4M5 17v4M3 19h4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M6 14l1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></symbol>
+<symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol><symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></symbol><symbol id="i-building" viewBox="0 0 24 24"><path d="M4 21V5l8-3v19"/><path d="M12 9h8v12"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 13v.01M16 17v.01"/></symbol></svg>
+<div class="topbar">
+  <div class="tb-in">
+    <button class="logo" id="goHome" type="button" aria-label="Inicio"><span class="anv"><svg class="i"><use href="#i-compass"/></svg></span><span>Mentor<em>IA</em></span></button>
+    <nav class="stepper" id="stepper" aria-label="Pasos"></nav>
+    <div class="tb-tools"><span class="mt-chip-prog" id="miniProg" title="Progreso"></span><button class="tb-btn" id="btnLang" type="button" aria-label="Idioma / Language"><svg class="i"><use href="#i-globe"/></svg><span class="lbl" id="langLbl">EN</span></button><button class="tb-btn" id="btnIA" type="button"><svg class="i"><use href="#i-key"/></svg><span class="lbl">IA</span></button><button class="tb-btn" id="btnHelp" type="button"><svg class="i"><use href="#i-help"/></svg><span class="lbl" data-i18n="s.ayuda">Ayuda</span></button></div>
+  </div>
+  <div class="progress"><span id="progBar"></span></div>
+</div>
+
+<main id="app">
+<!-- 0 · INICIO -->
+<section class="screen" data-step="0">
+  <div class="hero">
+    <p class="eyebrow" data-i18n="h.eyebrow">Tutor virtual para tu TFG, TFM o trabajo académico · Universidad Miguel Hernández de Elche</p>
+    <h1 data-i18n="h.h1">Piensa, investiga y argumenta: <em>el trabajo lo haces tú</em></h1>
+    <p class="lede" data-i18n="h.lede">MentorIA te acompaña desde el primer interés hasta la defensa. Propone opciones, hace preguntas y señala carencias, pero nunca escribe el trabajo por ti. Sirve para cualquier grado o máster y funciona con tu propia clave de IA.</p>
+    <div class="actions"><button class="btn btn-primary btn-big" id="btnStart" type="button"><svg class="i"><use href="#i-play"/></svg><span data-i18n="h.start">Empezar mi proyecto</span></button><button class="btn btn-ghost btn-big" id="btnEjemplo" type="button"><svg class="i"><use href="#i-eye"/></svg><span data-i18n="h.demo">Ver un proyecto de ejemplo</span></button></div>
+    <p class="mt-inicio" id="inicioProj"></p>
+    <div class="mt-autores"><span class="mt-autores-cap" data-i18n="h.realizada">Realizada entre</span>
+      <div class="mt-autor"><span class="mt-av" style="--c:#E4572E">FB</span><div><b>Fernando Borrás Rocher</b><small>Universidad Miguel Hernández de Elche</small></div></div><span class="mt-x">×</span>
+      <div class="mt-autor"><span class="mt-av" style="--c:#0E8C7A">IM</span><div><b>Irene Martínez Quiles</b><small>Universidad Miguel Hernández de Elche</small></div></div>
+      <p class="mt-idea" data-i18n="h.idea">A partir de la idea original de Irene Martínez Quiles: un tutor virtual para el TFG de Derecho Tributario del Grado en DADE.</p></div>
+  </div>
+  <h2 class="sec-title" data-i18n="h.princ">Cuatro principios</h2>
+  <div class="journey" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+    <div class="jstop" style="--c:#6B4FD8"><div class="ji"><svg class="i"><use href="#i-compass"/></svg></div><b data-i18n="h.p1t">Acompaña, no escribe</b><span data-i18n="h.p1">El tutor orienta con preguntas y criterios. Si le pides que redacte tu trabajo, se negará con amabilidad.</span></div>
+    <div class="jstop" style="--c:#1F6FB2"><div class="ji"><svg class="i"><use href="#i-check"/></svg></div><b data-i18n="h.p2t">Decides tú</b><span data-i18n="h.p2">Ante varias opciones razonables, las ve todas y tú eliges y escribes. Todo queda registrado.</span></div>
+    <div class="jstop" style="--c:#E4572E"><div class="ji"><svg class="i"><use href="#i-shield"/></svg></div><b data-i18n="h.p3t">Sin fuentes inventadas</b><span data-i18n="h.p3">Las referencias que mencione la IA se señalan y los DOI se comprueban. Verifica siempre en la fuente original.</span></div>
+    <div class="jstop" style="--c:#0E8C7A"><div class="ji"><svg class="i"><use href="#i-doc"/></svg></div><b data-i18n="h.p4t">Informe para tu tutor</b><span data-i18n="h.p4">Un Word con tus decisiones, qué escribiste tú y qué propuso la IA, y tu declaración de uso.</span></div>
+  </div>
+  <h2 class="sec-title" data-i18n="h.fases">Un recorrido en siete fases</h2>
+  <div class="mt-fases" id="fasesHero"></div>
+  <h2 class="sec-title" data-i18n="h.donde">Dónde va cada cosa</h2>
+  <div class="zonas">
+    <div class="zona l"><h4 data-i18n="h.z1t">Siempre en tu ordenador</h4><ul><li data-i18n="h.z1a">Tu proyecto, que se guarda en este navegador</li><li data-i18n="h.z1b">Tu clave de IA (nunca va a ningún otro sitio)</li><li data-i18n="h.z1c">El informe, el registro de autoría y la comprobación de huellas</li></ul></div>
+    <div class="zona n"><h4 data-i18n="h.z2t">Sale hacia tu proveedor de IA</h4><ul><li data-i18n="h.z2a">Lo que escribes al tutor y las decisiones que has confirmado, para que responda con contexto</li><li data-i18n="h.z2b">No pegues datos personales de terceros ni datos clínicos identificables</li><li data-i18n="h.z2c">Los DOI se comprueban en Crossref</li></ul></div>
+  </div>
+</section>
+
+<!-- 1 · PERFIL -->
+<section class="screen" data-step="1">
+  <header class="sh" style="--c:#6B4FD8"><div class="sh-ico"><svg class="i"><use href="#i-user"/></svg></div><div><p class="sh-step" data-i18n="s1.step">Fase 1 de 7</p><h2 data-i18n="s1.h">Tu punto de partida</h2><p class="sh-lede" data-i18n="s1.lede">Cuéntale al tutor qué estudias y qué te interesa. Con eso adapta sus preguntas a tu disciplina.</p></div></header>
+  <div class="card"><h3><span class="num">1</span><span data-i18n="s1.c1">Tu titulación</span></h3>
+    <div class="grid2"><div class="field"><label for="pTit" data-i18n="s1.tit">Grado o máster</label><input type="text" id="pTit" placeholder="Ej.: Grado en Derecho · Máster en Ingeniería Industrial" data-i18n-ph="s1.titph"></div><div class="field"><label for="pCentro" data-i18n="s1.centro">Universidad o centro</label><input type="text" id="pCentro"></div></div>
+    <div class="grid3"><div class="field"><label for="pNivel" data-i18n="s1.nivel">Tipo de trabajo</label><select id="pNivel"><option value="TFG">TFG (Trabajo Fin de Grado)</option><option value="TFM">TFM (Trabajo Fin de Máster)</option><option value="Otro" data-i18n="s1.otro">Otro trabajo académico</option></select></div><div class="field"><label for="pNombre" data-i18n="s1.nombre">Tu nombre (opcional, para el informe)</label><input type="text" id="pNombre"></div><div class="field"><label for="pTutor" data-i18n="s1.tutor">Tu tutor o tutora (opcional)</label><input type="text" id="pTutor"></div></div>
+    <div class="field" style="max-width:340px"><label for="pIdioma" data-i18n="s1.idioma">Idioma en el que te responde el tutor</label><select id="pIdioma"></select></div></div>
+  <div class="card"><h3><span class="num">2</span><span data-i18n="s1.c2">Tu ámbito</span></h3><p class="sub" data-i18n="s1.c2s">Elige el que más se acerque a tu disciplina. Adapta el vocabulario, las fuentes, la metodología y la estructura que propone el tutor.</p><div class="mt-ambitos" id="ambitos"></div>
+    <div id="ambExtra"></div></div>
+  <div class="card"><h3><span class="num">3</span><span data-i18n="s1.c3">Tus intereses</span></h3>
+    <div id="d-intereses"></div><div id="d-experiencia"></div>
+    <div class="actions"><button class="btn btn-primary" type="button" data-ok="intereses,experiencia" data-i18n="s1.guardar">Guardar mi punto de partida</button><button class="btn btn-ghost" type="button" data-ia="analisis" data-fase="inicio"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s1.analiza">Que el tutor analice mi punto de partida</span></button></div>
+    <div id="o-analisis"></div></div>
+</section>
+
+<!-- 2 · TEMA -->
+<section class="screen" data-step="2">
+  <header class="sh" style="--c:#1F6FB2"><div class="sh-ico"><svg class="i"><use href="#i-bulb"/></svg></div><div><p class="sh-step" data-i18n="s2.step">Fase 2 de 7</p><h2 data-i18n="s2.h">El tema</h2><p class="sh-lede" data-i18n="s2.lede">Explora líneas posibles, elige o escribe la tuya y delimítala hasta convertirla en un problema concreto.</p></div></header>
+  <div class="card"><h3><span class="num">1</span><span data-i18n="s2.c1">Explora líneas posibles</span></h3><p class="sub" data-i18n="s2.c1s">El tutor propone cinco líneas. Ninguna es la elección definitiva: son puntos de partida.</p>
+    <div class="actions" style="margin-top:0"><button class="btn btn-primary" type="button" data-ia="lineas" data-fase="tema"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s2.prop">Proponer cinco líneas</span></button></div><div id="o-lineas"></div></div>
+  <div class="card"><h3><span class="num">2</span><span data-i18n="s2.c2">Tu tema</span></h3><div id="d-tema"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="tema" data-i18n="s.confirmar">Confirmar</button></div></div>
+  <div class="card"><h3><span class="num">3</span><span data-i18n="s2.c3">Del tema al problema</span></h3><p class="sub" data-i18n="s2.c3s">Pide ayuda para concretar y escribe después con tus palabras el problema central y lo que dejas fuera.</p>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="cuestiones" data-fase="tema"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s2.cuest">Ayúdame a concretar el tema</span></button></div><div id="o-cuestiones"></div>
+    <div id="d-problema"></div><div id="d-fuera"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="problema,fuera" data-i18n="s.confirmar">Confirmar</button></div></div>
+</section>
+
+<!-- 3 · PREGUNTA -->
+<section class="screen" data-step="3">
+  <header class="sh" style="--c:#E4572E"><div class="sh-ico"><svg class="i"><use href="#i-target"/></svg></div><div><p class="sh-step" data-i18n="s3.step">Fase 3 de 7</p><h2 data-i18n="s3.h">Pregunta, objetivos e hipótesis</h2><p class="sh-lede" data-i18n="s3.lede">Lo que guía todo el trabajo: una pregunta clara y objetivos coherentes con ella.</p></div></header>
+  <div class="card"><h3><span class="num">1</span><span data-i18n="s3.c1">Pregunta de investigación</span></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="preguntas" data-fase="pregunta"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s3.prop">Ver formulaciones posibles</span></button></div><div id="o-preguntas"></div>
+    <div id="d-pregunta"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="pregunta" data-i18n="s.confirmar">Confirmar</button></div></div>
+  <div class="card"><h3><span class="num">2</span><span data-i18n="s3.c2">Objetivos</span></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="objetivos" data-fase="pregunta"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s3.objprop">Ver una propuesta de objetivos</span></button></div><div id="o-objetivos"></div>
+    <div id="d-objGeneral"></div><div id="d-objEsp"></div>
+    <div class="actions"><button class="btn btn-primary" type="button" data-ok="objGeneral,objEsp" data-i18n="s.confirmar">Confirmar</button><button class="btn btn-ghost" type="button" data-ia="coherencia" data-fase="pregunta"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s3.coh">Comprobar la coherencia</span></button></div><div id="o-coherencia"></div></div>
+  <div class="card" id="cardHip"><h3><span class="num">3</span><span data-i18n="s3.c3">Hipótesis</span> <small class="muted" id="hipNota"></small></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="hipotesis" data-fase="pregunta"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s3.hipayuda">¿Necesito hipótesis? Orientación</span></button></div><div id="o-hipotesis"></div>
+    <div id="d-hipotesis"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="hipotesis" data-i18n="s.confirmar">Confirmar</button></div></div>
+</section>
+
+<!-- 4 · DISEÑO -->
+<section class="screen" data-step="4">
+  <header class="sh" style="--c:#0E8C7A"><div class="sh-ico"><svg class="i"><use href="#i-grid"/></svg></div><div><p class="sh-step" data-i18n="s4.step">Fase 4 de 7</p><h2 data-i18n="s4.h">Diseño del trabajo</h2><p class="sh-lede" data-i18n="s4.lede">Metodología, plan de fuentes e índice razonado: el esqueleto sobre el que escribirás.</p></div></header>
+  <div class="card"><h3><span class="num">1</span><span data-i18n="s4.c1">Metodología</span></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="metodo" data-fase="diseno"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s4.met">Ver alternativas metodológicas</span></button></div><div id="o-metodo"></div>
+    <div id="d-metodo"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="metodo" data-i18n="s.confirmar">Confirmar</button></div></div>
+  <div class="card"><h3><span class="num">2</span><span data-i18n="s4.c2">Plan de fuentes</span></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="fuentes" data-fase="diseno"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s4.fue">Orientarme para buscar fuentes</span></button></div><div id="o-fuentes"></div>
+    <div id="d-fuentes"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="fuentes" data-i18n="s.confirmar">Confirmar</button></div></div>
+  <div class="card"><h3><span class="num">3</span><span data-i18n="s4.c3">Índice razonado</span></h3>
+    <div class="actions" style="margin-top:0"><button class="btn btn-ghost" type="button" data-ia="indice" data-fase="diseno"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s4.ind">Ver una propuesta de estructura</span></button></div><div id="o-indice"></div>
+    <div id="d-indice"></div><div class="actions"><button class="btn btn-primary" type="button" data-ok="indice" data-i18n="s.confirmar">Confirmar</button><button class="btn btn-ghost" type="button" data-ia="indiceRev" data-fase="diseno"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s4.indrev">Revisar mi índice</span></button></div><div id="o-indiceRev"></div></div>
+</section>
+
+<!-- 5 · REVISIÓN -->
+<section class="screen" data-step="5">
+  <header class="sh" style="--c:#C98200"><div class="sh-ico"><svg class="i"><use href="#i-pencil"/></svg></div><div><p class="sh-step" data-i18n="s5.step">Fase 5 de 7</p><h2 data-i18n="s5.h">Revisión de lo que escribes</h2><p class="sh-lede" data-i18n="s5.lede">Pega un fragmento de tu borrador. El tutor señala claridad, argumentación, coherencia y uso de fuentes, pero no reescribe nada.</p></div></header>
+  <div class="card"><div class="field"><label for="revSec" data-i18n="s5.sec">Sección o capítulo (opcional)</label><input type="text" id="revSec"></div><div class="field"><label for="revTxt" data-i18n="s5.txt">Tu texto (mínimo 30 palabras)</label><textarea id="revTxt" rows="9"></textarea></div>
+    <div class="actions"><button class="btn btn-primary" id="btnRev" type="button"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s5.pedir">Pedir revisión</span></button></div><p class="help" data-i18n="s5.nota">El texto va a tu proveedor de IA. Esta revisión no sustituye a la de tu tutor o tutora.</p></div>
+  <div id="revList"></div>
+</section>
+
+<!-- 6 · DEFENSA -->
+<section class="screen" data-step="6">
+  <header class="sh" style="--c:#6B4FD8"><div class="sh-ico"><svg class="i"><use href="#i-quiz"/></svg></div><div><p class="sh-step" data-i18n="s6.step">Fase 6 de 7</p><h2 data-i18n="s6.h">Prepara la defensa</h2><p class="sh-lede" data-i18n="s6.lede">El tutor hace de miembro del tribunal: te plantea una pregunta, tú respondes y analiza tu respuesta. Sin nota numérica.</p></div></header>
+  <div class="card"><div class="grid2"><div class="field"><label for="defTipo" data-i18n="s6.tipo">Tipo de pregunta</label><select id="defTipo"></select></div></div><div class="actions" style="margin-top:0"><button class="btn btn-primary" id="btnDef" type="button"><svg class="i"><use href="#i-sparkles"/></svg><span data-i18n="s6.pedir">Pregunta del tribunal</span></button></div></div>
+  <div id="defList"></div>
+</section>
+
+<!-- 7 · INFORME -->
+<section class="screen" data-step="7">
+  <header class="sh" style="--c:#0E8C7A"><div class="sh-ico"><svg class="i"><use href="#i-doc"/></svg></div><div><p class="sh-step" data-i18n="s7.step">Fase 7 de 7</p><h2 data-i18n="s7.h">Tu progreso y el informe para tu tutor</h2><p class="sh-lede" data-i18n="s7.lede">Revisa lo que has avanzado y descarga el informe con tus decisiones, la procedencia de cada una y tu declaración de uso de IA.</p></div></header>
+  <div id="panelProg"></div>
+  <div class="card"><h3 data-i18n="s7.autoria">Qué escribiste tú y qué propuso la IA</h3><p class="sub" data-i18n="s7.autsub">Se calcula comparando cada decisión confirmada con lo que respondió la IA. Elegir una propuesta es legítimo; lo importante es que quede constancia.</p><div id="panelAutoria"></div></div>
+  <div class="card"><h3 data-i18n="s7.refs">Referencias que mencionó la IA</h3><p class="sub" data-i18n="s7.refsub">La IA puede equivocarse al citar. Comprueba cada una en la fuente original antes de usarla. Los DOI se consultan en Crossref.</p><div id="panelRefs"></div></div>
+  <div class="card"><h3 data-i18n="s7.uso">Uso de la IA</h3><div id="panelUso"></div>
+    <div class="field" style="margin-top:12px"><label for="decl" data-i18n="s7.decl">Tu declaración personal de uso de IA</label><textarea id="decl" rows="5"></textarea></div><button class="btn btn-ghost btn-sm" id="btnDecl" type="button" data-i18n="s7.declgen">Proponer un borrador a partir del registro</button></div>
+  <div class="card"><h3 data-i18n="s7.export">Descargar</h3><div class="actions" style="margin-top:0"><button class="btn btn-word btn-big" id="btnWord" type="button"><svg class="i"><use href="#i-doc"/></svg><span data-i18n="s7.word">Informe para mi tutor (Word)</span></button><button class="btn btn-ghost" id="btnJson" type="button"><svg class="i"><use href="#i-download"/></svg><span data-i18n="s7.json">Mi proyecto (JSON)</span></button><label class="btn btn-ghost" for="impJson" style="cursor:pointer"><svg class="i"><use href="#i-upload"/></svg><span data-i18n="s7.imp">Abrir un proyecto…</span></label><input type="file" id="impJson" accept=".json" hidden><button class="btn btn-ghost" id="btnBorrar" type="button"><svg class="i"><use href="#i-trash"/></svg><span data-i18n="s7.borrar">Empezar un proyecto nuevo</span></button></div><p class="help" data-i18n="s7.expnota">El proyecto en JSON te permite continuar en otro equipo. Incluye un registro con huellas de cada decisión.</p></div>
+</section>
+</main>
+
+<footer class="mt-foot"><hr><p><b>MentorIA</b> · Fernando Borrás Rocher × Irene Martínez Quiles · Universidad Miguel Hernández de Elche. <span data-i18n="f.txt">Herramienta de apoyo: la IA puede equivocarse y la supervisión académica es de tu tutor o tutora. Tu proyecto se guarda solo en este navegador.</span></p></footer>
+<button class="mt-fab" id="fabChat" type="button" aria-label="Chat"><svg class="i"><use href="#i-chat"/></svg><span data-i18n="s.preguntaTutor">Pregunta al tutor</span></button>
+<div class="bottomnav"><div class="bn-in"><button class="btn btn-ghost" id="navBack" type="button"><svg class="i"><use href="#i-left"/></svg><span data-i18n="s.atras">Atrás</span></button><div class="bn-hint" id="navHint"></div><button class="btn btn-primary" id="navNext" type="button"><span id="navNextTxt">Siguiente</span><svg class="i"><use href="#i-right"/></svg></button></div></div>
+
+<div class="mt-chat" id="chatPanel" hidden role="dialog" aria-label="Chat"><div class="mt-chat-h"><b data-i18n="s.chatH">Pregunta al tutor</b><button type="button" id="chatX" aria-label="Cerrar">✕</button></div><div class="mt-chat-b" id="chatMsgs"></div><div class="mt-chat-f"><textarea id="chatIn" rows="2" placeholder="Escribe tu duda…" data-i18n-ph="s.chatPh"></textarea><button class="btn btn-primary btn-sm" id="chatSend" type="button"><svg class="i"><use href="#i-right"/></svg></button></div></div>
+
+<div class="modal" id="mIA" role="dialog" aria-modal="true" aria-labelledby="mIAT"><div class="modal-box"><div class="modal-head"><h2 id="mIAT" data-i18n="m.iaH">Inteligencia artificial</h2><button type="button" data-close data-i18n="s.cerrar">Cerrar</button></div><div class="modal-body">
+  <div class="field"><label for="selProv" data-i18n="m.prov">Proveedor</label><select id="selProv"><option value="openai">OpenAI</option><option value="gemini">Google Gemini</option><option value="anthropic">Anthropic Claude</option></select></div>
+  <div class="field"><label for="apiKey" data-i18n="m.key">Tu clave de API</label><div class="keyrow"><input type="password" id="apiKey" placeholder="" autocomplete="off"><button class="eye" id="btnEye" type="button" aria-label="Ver"><svg class="i"><use href="#i-eye"/></svg></button></div></div>
+  <div class="field"><label for="modelo" data-i18n="m.modelo">Modelo</label><input type="text" id="modelo" list="modelos"><datalist id="modelos"></datalist></div>
+  <div class="actions"><button class="btn btn-ghost btn-sm" id="btnModelos" type="button" data-i18n="m.lista">Ver los modelos de mi clave</button></div>
+  <p class="help" id="iaEstado" data-i18n="m.nota">La clave se guarda solo en este navegador y se envía únicamente a tu proveedor. Cada persona usa la suya y paga su propio uso; algunos proveedores ofrecen un plan gratuito limitado, consulta sus condiciones. Elige un modelo económico: este uso no necesita el más potente.</p></div></div></div>
+<div class="modal" id="mHelp" role="dialog" aria-modal="true" aria-labelledby="mHelpT"><div class="modal-box"><div class="modal-head"><h2 id="mHelpT" data-i18n="s.ayuda">Ayuda</h2><button type="button" data-close data-i18n="s.cerrar">Cerrar</button></div><div class="modal-body"><div class="glos" id="glos"></div></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>"use strict";
+/* ══════════════════════════════════════════════════════════
+   MentorIA · tutor virtual para TFG, TFM y trabajos académicos
+   Fernando Borrás Rocher × Irene Martínez Quiles · Universidad Miguel Hernández de Elche
+   Basada en el cuaderno «Tutor virtual para el TFG de Derecho Tributario del Grado en DADE» (I. Martínez Quiles)
+   ══════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ico=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const uid=p=>p+Math.random().toString(36).slice(2,8);
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const wc=s=>(String(s||'').trim().match(/[\p{L}\p{N}]+/gu)||[]).length;
+const iso=()=>new Date().toISOString();
+const slug=s=>norm(s).replace(/ /g,'_').slice(0,40)||'x';
+function toast(m,ms=4200){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),ms)}
+function dl(n,c,t){const b=c instanceof Blob?c:new Blob([c],{type:t});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2500)}
+function cargaLib(urls){return urls.reduce((p,u)=>p.catch(()=>new Promise((ok,ko)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>{s.remove();ko()};document.head.appendChild(s)})),Promise.reject()).catch(()=>{throw new Error(t('err.lib'))})}
+
+/* ── idioma de la interfaz ── */
+let LANG=localStorage.getItem('mt_lang')||((navigator.language||'es').toLowerCase().startsWith('es')?'es':'en');
+const DT={es:{},en:{}};
+const t=(k,...a)=>{let s=DT[LANG][k]??DT.es[k]??k;a.forEach((v,i)=>{s=s.split('{'+i+'}').join(v)});return s};
+
+/* ── huella: SHA-256 y canonización ── */
+const canon=v=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canon).join(',')+']':'{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
+function sha256js(bytes){
+  const pr=[];for(let n=2;pr.length<64;n++)if(pr.every(p=>n%p))pr.push(n);
+  const fr=x=>Math.floor((x-Math.floor(x))*4294967296),K=pr.map(p=>fr(Math.cbrt(p))),H=pr.slice(0,8).map(p=>fr(Math.sqrt(p)));
+  const l=bytes.length,pad=new Uint8Array(((l+9+63)>>6)<<6);pad.set(bytes);pad[l]=0x80;const dv=new DataView(pad.buffer);dv.setUint32(pad.length-8,Math.floor(l*8/4294967296));dv.setUint32(pad.length-4,(l*8)>>>0);
+  const rr=(x,n)=>(x>>>n)|(x<<(32-n)),W=new Uint32Array(64);
+  for(let i=0;i<pad.length;i+=64){
+    for(let q=0;q<16;q++)W[q]=dv.getUint32(i+q*4);
+    for(let q=16;q<64;q++){const s0=rr(W[q-15],7)^rr(W[q-15],18)^(W[q-15]>>>3),s1=rr(W[q-2],17)^rr(W[q-2],19)^(W[q-2]>>>10);W[q]=(W[q-16]+s0+W[q-7]+s1)>>>0}
+    let [a,b,c,d,e,f,g,hh]=H;
+    for(let q=0;q<64;q++){const S1=rr(e,6)^rr(e,11)^rr(e,25),ch=(e&f)^(~e&g),t1=(hh+S1+ch+K[q]+W[q])>>>0,S0=rr(a,2)^rr(a,13)^rr(a,22),mj=(a&b)^(a&c)^(b&c),t2=(S0+mj)>>>0;hh=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0}
+    [a,b,c,d,e,f,g,hh].forEach((v,j)=>H[j]=(H[j]+v)>>>0);
+  }
+  return H.map(v=>v.toString(16).padStart(8,'0')).join('');
+}
+async function sha256(str){const b=new TextEncoder().encode(str);if(window.crypto?.subtle){try{return [...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(x=>x.toString(16).padStart(2,'0')).join('')}catch{}}return sha256js(b)}
+
+/* ── proyecto y persistencia ── */
+const nuevoP=()=>({v:1,id:uid('m'),creado:iso(),perfil:{nombre:'',titulacion:'',centro:'Universidad Miguel Hernández de Elche',nivel:'TFG',tutor:'',idiomaTutor:LANG==='en'?'English':'Español',ambito:'',tipo:'',otro:''},dec:{},out:{},rev:[],def:[],chat:[],uso:[],refs:[],hist:[],decl:'',informe:false,ejemplo:false});
+let P=nuevoP();
+const D=k=>P.dec[k]?.valor||'';
+const dbP=new Promise((ok,ko)=>{const r=indexedDB.open('mentoria',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
+const kv=async(mode,fn)=>{const d=await dbP;return new Promise((ok,ko)=>{const tx=d.transaction('kv',mode),q=fn(tx.objectStore('kv'));tx.oncomplete=()=>ok(q&&q.result);tx.onerror=()=>ko(tx.error)})};
+let _g;function guarda(){clearTimeout(_g);_g=setTimeout(()=>kv('readwrite',s=>s.put(P,'proy')).catch(()=>toast(t('err.save'))),400)}
+async function cargaP(){try{const p=await kv('readonly',s=>s.get('proy'));if(p&&p.perfil)return p}catch{}return null}
+
+/* ── trazabilidad: qué escribió el estudiante y qué propuso la IA ── */
+const hojas=(o,out=[])=>{
+  if(typeof o==='string'){if(o.trim().length>3)out.push(o)}
+  else if(Array.isArray(o)){
+    o.forEach(x=>hojas(x,out));
+    if(o.length>1&&o.every(x=>typeof x==='string'))out.push(o.join('\n'));
+    if(o.length&&o.every(x=>x&&typeof x==='object'&&!Array.isArray(x))){const l=o.map(x=>Object.values(x).filter(v=>typeof v==='string').join(' — '));l.forEach(x=>out.push(x));if(l.length>1)out.push(l.join('\n'))}
+  }else if(o&&typeof o==='object')Object.values(o).forEach(x=>hojas(x,out));
+  return out;
+};
+function poolIA(){
+  const p=[];
+  Object.values(P.out).forEach(o=>{if(o?.texto)p.push(o.texto);if(o?.json)hojas(o.json,p)});
+  P.chat.filter(m=>m.role==='assistant').forEach(m=>p.push(m.content));
+  P.rev.forEach(r=>p.push(r.feedback));P.def.forEach(d=>{if(d.preg)p.push(d.preg);if(d.eval)p.push(d.eval)});
+  return p.filter(Boolean);
+}
+const limpia=s=>String(s||'').replace(/^\s*(?:\d+[.)]|[-*•])\s*/gm,'');
+const sh=(s,n=5)=>{const w=norm(s).split(' ').filter(Boolean),o=new Set();for(let i=0;i+n<=w.length;i++)o.add(w.slice(i,i+n).join(' '));return o};
+function origenDe(valor){
+  valor=limpia(valor);const nv=norm(valor);if(!nv)return '';const pool=poolIA().map(limpia);if(!pool.length)return 'propia';
+  const np=pool.map(norm);if(np.some(p=>p.includes(nv)))return 'ia-elegida';
+  if(nv.split(' ').length<5)return 'propia';
+  const S=sh(valor);if(!S.size)return 'propia';const ps=new Set();pool.forEach(p=>sh(p).forEach(x=>ps.add(x)));
+  let hit=0;S.forEach(x=>{if(ps.has(x))hit++});const r=hit/S.size;
+  return r>=0.7?'ia-elegida':r>=0.25?'ia-editada':'propia';
+}
+async function anota(clave,valor,origen){
+  const prev=P.hist.at(-1)?.hh||'',vh=await sha256(valor),ev={n:P.hist.length+1,t:iso(),clave,origen,vh,prev};
+  ev.hh=await sha256(prev+canon({n:ev.n,t:ev.t,clave,origen,vh}));P.hist.push(ev);
+}
+async function verificaHist(){
+  let prev='';for(const e of P.hist){const h=await sha256(prev+canon({n:e.n,t:e.t,clave:e.clave,origen:e.origen,vh:e.vh}));if(e.prev!==prev||e.hh!==h)return false;prev=e.hh}return true;
+}
+async function estadoDec(clave){
+  const d=P.dec[clave];if(!d?.ok)return 'pend';const ult=[...P.hist].reverse().find(e=>e.clave===clave);
+  return ult&&ult.vh===await sha256(d.valor)?'ok':'mod';
+}
+
+/* ── proveedores de IA: OpenAI, Google Gemini, Anthropic Claude ── */
+const PROV={
+  openai:{n:'OpenAI',m:'gpt-6-luna',k:'ia_openai_key'},
+  gemini:{n:'Google Gemini',m:'gemini-2.5-flash',k:'mt_key_gemini'},
+  anthropic:{n:'Anthropic Claude',m:'claude-haiku-4-5-20251001',k:'mt_key_anthropic'}};
+const getProv=()=>PROV[localStorage.getItem('mt_prov')]?localStorage.getItem('mt_prov'):'openai';
+const getKey=(p=getProv())=>localStorage.getItem(PROV[p].k)||'';
+const getMod=(p=getProv())=>localStorage.getItem('mt_model_'+p)||PROV[p].m;
+const parseJ=tx=>{tx=String(tx||'').trim().replace(/^```(?:json)?|```$/g,'').trim();try{return JSON.parse(tx)}catch{const m=tx.match(/\{[\s\S]*\}/);if(m)try{return JSON.parse(m[0])}catch{}}return null};
+const alterna=(msgs,rolA)=>{const o=[];for(const m of msgs.filter(m=>m.role!=='system')){const r=m.role==='assistant'?rolA:'user';if(o.length&&o.at(-1).role===r)o.at(-1).text+='\n\n'+m.content;else o.push({role:r,text:m.content})}if(o.length&&o[0].role!=='user')o.unshift({role:'user',text:'.'});return o};
+function httpErr(st,tx,pv,mod){
+  if(st===401||st===403||(pv==='gemini'&&st===400&&/API key|API_KEY/i.test(tx)))return new Error(t('err.badkey',PROV[pv].n));
+  if(st===404||/model_not_found|not found|does not exist/i.test(tx))return new Error(t('err.model',mod));
+  if(st===429&&/quota|billing|credit|RESOURCE_EXHAUSTED/i.test(tx))return new Error(t('err.quota',PROV[pv].n));
+  return new Error(`${PROV[pv].n} ${st}: ${String(tx).slice(0,180)}`);
+}
+async function conReintentos(fn,pv){
+  for(let k=0;k<5;k++){
+    let r;try{r=await fn()}catch{if(k>=2)throw new Error(t('err.net',PROV[pv].n));await sleep(1500);continue}
+    if(r.ok)return r;if(r.status===429||r.status>=500){const tx=await r.clone().text();if(r.status===429&&/quota|billing|credit/i.test(tx))return r;await sleep(2**(k+1)*1000);continue}return r;
+  }
+  throw new Error(t('err.busy',PROV[pv].n));
+}
+async function llm(msgs,{json=false,max=2600}={}){
+  const pv=getProv(),key=getKey(pv),mod=getMod(pv);if(!key)throw new Error(t('err.key'));
+  if(pv==='openai'){
+    const razona=/^(gpt-[56]|o\d)/.test(mod),o={json,reasoning:razona,comp:razona,temp:!razona};
+    for(let k=0;k<6;k++){
+      const body={model:mod,messages:msgs};if(o.json)body.response_format={type:'json_object'};
+      if(o.comp)body.max_completion_tokens=max*(o.reasoning?2:1);else body.max_tokens=max;if(o.reasoning)body.reasoning_effort='low';if(o.temp)body.temperature=0.4;
+      const r=await conReintentos(()=>fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify(body)}),pv);
+      if(r.ok)return (await r.json()).choices?.[0]?.message?.content||'';
+      const tx=await r.text();
+      if(r.status===400){
+        if(/reasoning_effort/i.test(tx)&&o.reasoning){o.reasoning=false;continue}if(/max_completion_tokens/i.test(tx)&&o.comp){o.comp=false;continue}
+        if(/max_tokens/i.test(tx)&&!o.comp){o.comp=true;continue}if(/temperature/i.test(tx)&&o.temp){o.temp=false;continue}
+        if(/response_format|json/i.test(tx)&&o.json){o.json=false;msgs=[...msgs.slice(0,-1),{...msgs.at(-1),content:msgs.at(-1).content+'\nResponde SOLO con JSON válido.'}];continue}
+      }
+      throw httpErr(r.status,tx,pv,mod);
+    }
+    throw new Error(t('err.busy','OpenAI'));
+  }
+  if(pv==='gemini'){
+    const sys=msgs.filter(m=>m.role==='system').map(m=>m.content).join('\n\n'),cont=alterna(msgs,'model').map(m=>({role:m.role,parts:[{text:m.text}]}));
+    const body={contents:cont,generationConfig:{maxOutputTokens:max,temperature:0.4}};if(sys)body.systemInstruction={parts:[{text:sys}]};if(json)body.generationConfig.responseMimeType='application/json';
+    const r=await conReintentos(()=>fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(mod)}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)}),pv);
+    const tx=await r.text();if(!r.ok)throw httpErr(r.status,tx,pv,mod);
+    const j=JSON.parse(tx),txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');if(!txt&&j.promptFeedback?.blockReason)throw new Error(t('err.blocked',j.promptFeedback.blockReason));return txt;
+  }
+  const sys=msgs.filter(m=>m.role==='system').map(m=>m.content).join('\n\n'),mm=alterna(msgs,'assistant').map(m=>({role:m.role,content:m.text}));
+  if(json)mm.at(-1).content+='\n\nResponde SOLO con un objeto JSON válido, sin texto alrededor.';
+  const r=await conReintentos(()=>fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:mod,max_tokens:max,system:sys,messages:mm})}),pv);
+  const tx=await r.text();if(!r.ok)throw httpErr(r.status,tx,pv,mod);return (JSON.parse(tx).content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+async function llmJSON(msgs,o={}){
+  for(let k=0;k<2;k++){const j=parseJ(await llm(msgs,{...o,json:true}));if(j&&typeof j==='object')return j}
+  throw new Error(t('err.json'));
+}
+async function listaModelos(pv=getProv()){
+  const key=getKey(pv);if(!key)throw new Error(t('err.key'));let r;
+  try{
+    if(pv==='openai')r=await fetch('https://api.openai.com/v1/models',{headers:{Authorization:'Bearer '+key}});
+    else if(pv==='gemini')r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100',{headers:{'x-goog-api-key':key}});
+    else r=await fetch('https://api.anthropic.com/v1/models?limit=100',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});
+  }catch{throw new Error(t('err.net',PROV[pv].n))}
+  const tx=await r.text();if(!r.ok)throw httpErr(r.status,tx,pv,'');const j=JSON.parse(tx);
+  if(pv==='openai')return (j.data||[]).map(m=>m.id).filter(id=>/^(gpt-|o\d|chatgpt-)/.test(id)&&!/(audio|realtime|transcribe|tts|image|embedding|moderation|search|instruct|whisper|dall|davinci|babbage|codex|computer-use)/i.test(id)).sort();
+  if(pv==='gemini')return (j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,'')).sort();
+  return (j.data||[]).map(m=>m.id).sort();
+}
+
+/* ── referencias que menciona la IA: se señalan y los DOI se comprueban en Crossref ── */
+function extraeRefs(txt){
+  const out=[],add=(k,x)=>{x=x.trim().replace(/[.,;:]+$/,'');if(x&&!out.some(o=>o.t===x))out.push({k,t:x})};
+  (txt.match(/10\.\d{4,9}\/[^\s"<>)\]]+/g)||[]).forEach(x=>add('doi',x));
+  (txt.match(/\b(?:STS|STC|STSJ|SAN|SAP|ATS|AAN|STJUE|STEDH|TJUE|TEAC|RDGT|DGT)\b[^.\n;]{0,70}?\d{1,4}\/\d{2,4}/g)||[]).forEach(x=>add('juris',x));
+  (txt.match(/\b(?:Ley Orgánica|Ley|Real Decreto-ley|Real Decreto Legislativo|Real Decreto|Directiva(?: \(UE\))?|Reglamento(?: \(UE\))?|Orden)\s+(?:núm\.?\s*)?\d{1,4}\/\d{2,4}/gi)||[]).forEach(x=>add('norma',x));
+  (txt.match(/\(([A-ZÁÉÍÓÚÑ][\p{L}'’-]+(?: et al\.)?(?:,? (?:y|and|&) [A-ZÁÉÍÓÚÑ][\p{L}'’-]+)?,? \d{4}[a-z]?)\)/gu)||[]).forEach(x=>add('autor',x.slice(1,-1)));
+  return out;
+}
+async function verificaDOI(doi){
+  try{const r=await fetch('https://api.crossref.org/works/'+encodeURIComponent(doi));if(r.status===404)return {e:'no',tit:''};if(!r.ok)return {e:'?',tit:''};const j=await r.json();return {e:'si',tit:(j.message?.title||[''])[0]||''}}catch{return {e:'?',tit:''}}
+}
+async function registraIA(fase,tipo,texto){
+  P.uso.push({t:iso(),fase,tipo,prov:getProv(),modelo:getMod(),chars:String(texto||'').length});
+  const nuevas=extraeRefs(String(texto||'')).filter(r=>!P.refs.some(x=>x.t===r.t)).map(r=>({...r,fase,e:r.k==='doi'?'pend':'comprobar',tit:''}));
+  P.refs.push(...nuevas);guarda();
+  for(const r of nuevas.filter(x=>x.k==='doi')){const v=await verificaDOI(r.t);r.e=v.e;r.tit=v.tit}
+  guarda();return nuevas.length;
+}
+
+/* ══════════ TEXTOS: inglés de la interfaz estática y ambos idiomas de los mensajes dinámicos ══════════ */
+const EN={
+'s.ayuda':'Help','s.cerrar':'Close','s.chatPh':'Write your question…','s.confirmar':'Confirm','s.atras':'Back','s.preguntaTutor':'Ask the tutor','s.chatH':'Ask the tutor','f.txt':'Support tool: AI can be wrong and academic supervision belongs to your tutor. Your project is saved only in this browser.',
+'h.eyebrow':'A virtual tutor for your bachelor\'s or master\'s thesis or any academic project · Miguel Hernández University of Elche','h.h1':'Think, research and argue: <em>you do the work</em>',
+'h.lede':'MentorIA walks with you from your first interest to your defence. It suggests options, asks questions and points out gaps, but it never writes your work for you. It suits any degree or master and runs with your own AI key.',
+'h.start':'Start my project','h.demo':'See an example project','h.realizada':'Created by','h.idea':'Based on the original idea of Irene Martínez Quiles: a virtual tutor for the Tax Law thesis of the DADE degree.',
+'h.princ':'Four principles','h.p1t':'It guides, it does not write','h.p1':'The tutor guides with questions and criteria. If you ask it to write your work, it will politely refuse.','h.p2t':'You decide','h.p2':'Faced with several reasonable options, it shows them all and you choose and write. Everything is recorded.',
+'h.p3t':'No invented sources','h.p3':'References mentioned by the AI are flagged and DOIs are checked. Always verify in the original source.','h.p4t':'Report for your tutor','h.p4':'A Word file with your decisions, what you wrote and what the AI proposed, and your AI-use statement.',
+'h.fases':'A journey in seven phases','h.donde':'Where everything goes','h.z1t':'Always on your computer','h.z1a':'Your project, saved in this browser','h.z1b':'Your AI key (it never goes anywhere else)','h.z1c':'The report, the authorship record and the integrity checks',
+'h.z2t':'Sent to your AI provider','h.z2a':'What you write to the tutor and the decisions you have confirmed, so it can answer in context','h.z2b':'Do not paste third parties\' personal data or identifiable clinical data','h.z2c':'DOIs are checked on Crossref',
+'s1.step':'Phase 1 of 7','s1.h':'Your starting point','s1.lede':'Tell the tutor what you study and what interests you. It will adapt its questions to your discipline.','s1.c1':'Your degree','s1.tit':'Degree or master','s1.titph':'E.g.: Law degree · MSc in Industrial Engineering','s1.centro':'University or school','s1.nivel':'Type of work','s1.otro':'Other academic work','s1.nombre':'Your name (optional, for the report)','s1.tutor':'Your tutor (optional)','s1.idioma':'Language of the tutor\'s answers',
+'s1.c2':'Your field','s1.c2s':'Choose the closest to your discipline. It adapts the vocabulary, sources, methodology and structure the tutor suggests.','s1.c3':'Your interests','s1.guardar':'Save my starting point','s1.analiza':'Let the tutor analyse my starting point',
+'s2.step':'Phase 2 of 7','s2.h':'The topic','s2.lede':'Explore possible lines, choose or write your own and narrow it down until it becomes a specific problem.','s2.c1':'Explore possible lines','s2.c1s':'The tutor suggests five lines. None is the final choice: they are starting points.','s2.prop':'Suggest five lines','s2.c2':'Your topic','s2.c3':'From topic to problem','s2.c3s':'Ask for help to narrow it down, then write in your own words the central problem and what you leave out.','s2.cuest':'Help me narrow the topic',
+'s3.step':'Phase 3 of 7','s3.h':'Question, objectives and hypotheses','s3.lede':'What guides the whole work: a clear question and objectives consistent with it.','s3.c1':'Research question','s3.prop':'See possible wordings','s3.c2':'Objectives','s3.objprop':'See a proposed set of objectives','s3.coh':'Check consistency','s3.c3':'Hypothesis','s3.hipayuda':'Do I need a hypothesis? Guidance',
+'s4.step':'Phase 4 of 7','s4.h':'Designing the work','s4.lede':'Methodology, source plan and a reasoned outline: the skeleton on which you will write.','s4.c1':'Methodology','s4.met':'See methodological alternatives','s4.c2':'Source plan','s4.fue':'Guide me to find sources','s4.c3':'Reasoned outline','s4.ind':'See a proposed structure','s4.indrev':'Review my outline',
+'s5.step':'Phase 5 of 7','s5.h':'Reviewing what you write','s5.lede':'Paste a fragment of your draft. The tutor points out clarity, argument, consistency and use of sources, but rewrites nothing.','s5.sec':'Section or chapter (optional)','s5.txt':'Your text (at least 30 words)','s5.pedir':'Ask for a review','s5.nota':'The text goes to your AI provider. This review does not replace your tutor\'s.',
+'s6.step':'Phase 6 of 7','s6.h':'Prepare your defence','s6.lede':'The tutor acts as a panel member: it asks you a question, you answer and it analyses your answer. No numerical grade.','s6.tipo':'Type of question','s6.pedir':'Panel question',
+'s7.step':'Phase 7 of 7','s7.h':'Your progress and the report for your tutor','s7.lede':'Review your progress and download the report with your decisions, where each one came from and your AI-use statement.','s7.autoria':'What you wrote and what the AI proposed','s7.autsub':'Calculated by comparing each confirmed decision with the AI\'s answers. Choosing a proposal is legitimate; what matters is that it is on record.',
+'s7.refs':'References mentioned by the AI','s7.refsub':'AI can be wrong when citing. Check each one in the original source before using it. DOIs are looked up on Crossref.','s7.uso':'Use of AI','s7.decl':'Your personal AI-use statement','s7.declgen':'Suggest a draft from the log','s7.export':'Download','s7.word':'Report for my tutor (Word)','s7.json':'My project (JSON)','s7.imp':'Open a project…','s7.borrar':'Start a new project','s7.expnota':'The JSON project lets you continue on another computer. It includes a log with a fingerprint of each decision.',
+'m.iaH':'Artificial intelligence','m.prov':'Provider','m.key':'Your API key','m.modelo':'Model','m.lista':'List the models of my key','m.nota':'The key is stored only in this browser and sent only to your provider. Each person uses their own and pays for their own usage; some providers offer a limited free plan, check their terms. Choose an affordable model: this use does not need the most powerful one.'};
+Object.assign(DT.es,{
+'dec.intereses.s':'Intereses','dec.experiencia.s':'Experiencia previa','dec.tema.s':'Tema','dec.problema.s':'Problema central','dec.fuera.s':'Queda fuera del trabajo','dec.pregunta.s':'Pregunta de investigación','dec.objGeneral.s':'Objetivo general','dec.objEsp.s':'Objetivos específicos','dec.hipotesis.s':'Hipótesis','dec.metodo.s':'Metodología','dec.fuentes.s':'Plan de fuentes','dec.indice.s':'Índice','err.lib':'No se pudo cargar una librería: ¿hay conexión?','err.save':'No se pudo guardar el proyecto en el navegador','err.key':'Falta tu clave de IA. Pulsa el botón «IA», arriba.','err.badkey':'{0} no reconoce tu clave. Revísala en el botón «IA».','err.model':'Tu clave no tiene acceso al modelo «{0}». Elige otro en el botón «IA».','err.quota':'Tu cuenta de {0} no tiene saldo o ha alcanzado su límite.','err.net':'No hay conexión con {0}.','err.busy':'{0} no responde ahora mismo. Inténtalo de nuevo en un momento.','err.blocked':'El proveedor ha bloqueado la respuesta ({0}). Reformula la petición.','err.json':'La IA no devolvió una respuesta con el formato esperado. Inténtalo de nuevo.',
+'need.ambito':'Primero elige tu ámbito en la fase 1.','refs.found':'El tutor ha mencionado {0} referencia(s). Compruébalas en la fuente original (fase 7).','rev.short':'Pega al menos 30 palabras de tu borrador.','def.short':'Escribe una respuesta de al menos 10 palabras.',
+'dec.intereses':'¿Qué áreas o temas te interesan?','dec.intereses.p':'Las áreas de tu disciplina que más te atraen…','dec.experiencia':'¿Alguna asignatura, experiencia o tema previo que quieras relacionar con tu trabajo?','dec.experiencia.p':'Asignaturas, prácticas, trabajos, lecturas…',
+'dec.tema':'Escribe el tema o línea de investigación que quieres desarrollar','dec.tema.h':'Puedes elegir una propuesta, modificarla o escribir la tuya.','dec.tema.p':'Mi tema es…',
+'dec.problema':'Problema central de tu trabajo','dec.problema.h':'Con tus palabras: ¿qué problema o pregunta de fondo quieres abordar?','dec.problema.p':'El problema central es…','dec.fuera':'Qué dejas fuera del trabajo','dec.fuera.h':'Delimitar es decidir qué no vas a tratar.','dec.fuera.p':'No voy a tratar…',
+'dec.pregunta':'Escribe la pregunta de investigación que vas a usar','dec.pregunta.h':'Una sola pregunta clara que oriente todo el trabajo.','dec.pregunta.p':'Mi pregunta de investigación es…',
+'dec.objGeneral':'Objetivo general','dec.objGeneral.p':'El objetivo general es…','dec.objEsp':'Objetivos específicos (uno por línea)','dec.objEsp.h':'Entre 3 y 5, coherentes con la pregunta.','dec.objEsp.p':'1. …',
+'dec.hipotesis':'Tu hipótesis (si procede)','dec.hipotesis.h':'Déjala vacía si tu trabajo no la requiere.','dec.hipotesis.p':'Mi hipótesis es…',
+'dec.metodo':'Enfoque y metodología que vas a seguir','dec.metodo.h':'Qué vas a hacer, con qué métodos y por qué.','dec.metodo.p':'Voy a seguir…','dec.fuentes':'Tu plan de fuentes','dec.fuentes.h':'Qué tipos de fuentes, dónde las buscarás y con qué criterios las elegirás.','dec.fuentes.p':'Buscaré en…',
+'dec.indice':'Índice de tu trabajo (un capítulo por línea)','dec.indice.h':'Con una línea sobre la función de cada capítulo, si puedes.','dec.indice.p':'1. Introducción…',
+'orig.propia':'Escrito por ti','orig.ia-elegida':'Propuesta de la IA, elegida','orig.ia-editada':'Propuesta de la IA, editada','st.ok':'Confirmado','st.mod':'Modificado tras confirmar','st.pend':'Sin confirmar',
+'b.usar':'Usar como punto de partida','b.usarSel':'Usar esta','b.copiado':'Copiado al cuadro de abajo. Edítalo con tus palabras y confirma.','thinking':'El tutor está pensando…',
+'o.problema':'Problema','o.pregunta':'Pregunta inicial','o.cuestiones':'Cuestiones','o.dificultades':'Dificultades','o.alcance':'Alcance','o.paraDecidir':'Preguntas para decidir','o.general':'Objetivo general','o.especificos':'Objetivos específicos','o.coherencia':'Coherencia','o.pregEst':'Pregunta para ti','o.funcion':'Función','o.aviso':'Esta respuesta es una orientación de la IA, no una decisión. Revisa lo que mencione en las fuentes originales.','o.refs':'Referencias mencionadas — compruébalas: {0}',
+'amb.tipo':'¿Qué tipo de trabajo piensas hacer?','amb.otro':'Describe tu ámbito o disciplina','amb.otroph':'Ej.: Musicología, Ciencias ambientales…','amb.sel':'Elige tipo…',
+'chat.tu':'Tú','chat.tutor':'Tutor','chat.vacio':'Pregúntame lo que quieras sobre tu trabajo: cómo delimitar el tema, qué metodología elegir, cómo estructurar un argumento… Te acompaño, pero no lo escribo por ti.',
+'rev.h':'Revisión','rev.sin':'Sección sin título','rev.pal':'{0} palabras','rev.vacio':'Aún no has pedido ninguna revisión.',
+'def.vacio':'Pulsa «Pregunta del tribunal» para empezar.','def.resp':'Tu respuesta','def.analiza':'Analizar mi respuesta','def.eval':'Análisis del tutor','def.mix':'Variada (cualquier tema)','def.pregN':'Pregunta {0}',
+'prog.h':'Tu recorrido','prog.hecho':'hecho','prog.pend':'pendiente','prog.de':'{0} de {1} hitos','hit.perfil':'Perfil y ámbito definidos','hit.inicio':'Punto de partida guardado','hit.tema':'Tema y problema confirmados','hit.pregunta':'Pregunta y objetivo general confirmados','hit.diseno':'Metodología e índice confirmados','hit.revision':'Al menos una revisión de borrador','hit.defensa':'Al menos una pregunta de defensa respondida','hit.informe':'Informe descargado',
+'aut.dec':'Decisión','aut.valor':'Lo que escribiste','aut.origen':'Procedencia','aut.estado':'Estado','aut.vacio':'Aún no has confirmado ninguna decisión.','aut.hist':'Registro de decisiones','aut.histok':'íntegro ({0} anotaciones)','aut.histko':'NO íntegro: el registro fue modificado','aut.resumen':'{0} escritas por ti · {1} editadas desde propuestas · {2} propuestas elegidas',
+'ref.vacio':'La IA no ha mencionado ninguna referencia concreta todavía.','ref.tipo':'Tipo','ref.ref':'Referencia','ref.est':'Estado','ref.fase':'Fase','ref.doi':'DOI','ref.juris':'Resolución','ref.norma':'Norma','ref.autor':'Autor-año','ref.si':'DOI encontrado','ref.no':'DOI NO encontrado: probablemente inventado','ref.q':'No se pudo comprobar','ref.pend':'Comprobando…','ref.comprobar':'Comprobar en la fuente oficial','ref.recheck':'Volver a comprobar los DOI',
+'uso.h':'{0} consultas a la IA con {1}','uso.sin':'Todavía no has usado la IA.','uso.fase':'Fase','uso.n':'Consultas','uso.nota':'Se registran solo la fecha, la fase y el modelo; no el contenido.',
+'decl.borrador':'He utilizado herramientas de inteligencia artificial generativa ({0}) como apoyo en la elaboración de este trabajo, en concreto para {1}. En total realicé {2} consultas. Las decisiones sobre el tema, la pregunta de investigación, los objetivos, la metodología y la estructura son mías, y el texto del trabajo lo he redactado yo. He comprobado en las fuentes originales las referencias que utilicé.',
+'decl.fases':'orientarme en: {0}','decl.nada':'No he utilizado herramientas de inteligencia artificial.',
+'fase.inicio':'punto de partida','fase.tema':'tema','fase.pregunta':'pregunta y objetivos','fase.diseno':'diseño','fase.revision':'revisión de borradores','fase.defensa':'preparación de la defensa','fase.chat':'consultas libres',
+'borrar.conf':'Se borrará el proyecto actual de este navegador. ¿Has descargado antes el JSON? ¿Continuar?','imp.conf':'Se reemplazará el proyecto actual por el del fichero. ¿Continuar?','imp.ok':'Proyecto abierto','imp.bad':'No es un proyecto de MentorIA','imp.hash':'Aviso: la huella del fichero no coincide; fue modificado después de exportarse.','ejemplo.nota':'Estás viendo un proyecto de ejemplo. Empieza el tuyo desde cero cuando quieras.','ejemplo.btn':'Empezar el mío',
+'inicio.cont':'Tienes un proyecto en este navegador: <b>{0}</b>. <button class="btn btn-ghost btn-sm" id="btnCont" type="button">Continuar</button>','inicio.cont0':'proyecto sin título',
+'hip.no':'(en tu ámbito normalmente no hace falta)','hip.si':'(en tu ámbito suele ser necesaria)','hip.opcional':'(opcional)',
+'nav0':'Empezar','nav1':'Siguiente: tema','nav2':'Siguiente: pregunta','nav3':'Siguiente: diseño','nav4':'Siguiente: revisión','nav5':'Siguiente: defensa','nav6':'Siguiente: informe','nav7':'Volver al inicio',
+'hint0':'Pruébalo con el <b>proyecto de ejemplo</b>: se ve sin clave.','hint1':'Elige tu ámbito: es lo que más adapta al tutor.','hint2':'Escribe tú el tema; el tutor solo propone.','hint3':'Una pregunta, un objetivo general y varios específicos.','hint4':'Metodología, fuentes e índice.','hint5':'Pega un fragmento: el tutor señala, no reescribe.','hint6':'Responde con tus palabras; no hay nota numérica.','hint7':'Descarga el informe y el JSON de tu proyecto.',
+'st.nombre':['Inicio','Perfil','Tema','Pregunta','Diseño','Revisión','Defensa','Informe'],
+'fase.titulos':['Punto de partida','Tema','Pregunta y objetivos','Diseño','Revisión','Defensa','Informe'],'fase.desc':['Intereses, ámbito y titulación','Líneas posibles y problema central','Pregunta, objetivos e hipótesis','Metodología, fuentes e índice','Feedback sobre tus borradores','Preguntas del tribunal','Progreso y entrega al tutor'],
+'rp.titulo':'Informe de seguimiento del trabajo','rp.estudiante':'Estudiante','rp.tutor':'Tutor/a','rp.titulacion':'Titulación','rp.ambito':'Ámbito','rp.nivel':'Tipo de trabajo','rp.fecha':'Fecha del informe','rp.prog':'Progreso','rp.dec':'Decisiones del estudiante','rp.rev':'Revisiones de borrador solicitadas','rp.def':'Preparación de la defensa','rp.refs':'Referencias mencionadas por la IA (pendientes de comprobar por el estudiante)','rp.uso':'Uso de la IA','rp.decl':'Declaración de uso de IA del estudiante','rp.integ':'Integridad','rp.huella':'Huella del proyecto','rp.nota':'Este informe lo genera MentorIA a partir de lo que el estudiante ha escrito y confirmado. La IA solo ha actuado como tutor virtual; la supervisión académica corresponde al tutor o tutora del trabajo.','rp.sinDecl':'(el estudiante no ha escrito una declaración)','rp.pregunta':'Pregunta del tribunal','rp.respuesta':'Respuesta del estudiante','rp.analisis':'Análisis del tutor virtual','rp.sinRev':'Sin revisiones.','rp.sinDef':'Sin preguntas de defensa.','rp.sinRefs':'Ninguna.','rp.modificado':'modificado tras confirmar','rp.autoria':'Procedencia de las decisiones'
+});
+Object.assign(DT.en,{
+'dec.intereses.s':'Interests','dec.experiencia.s':'Previous experience','dec.tema.s':'Topic','dec.problema.s':'Central problem','dec.fuera.s':'Left out of the work','dec.pregunta.s':'Research question','dec.objGeneral.s':'General objective','dec.objEsp.s':'Specific objectives','dec.hipotesis.s':'Hypothesis','dec.metodo.s':'Methodology','dec.fuentes.s':'Source plan','dec.indice.s':'Outline','err.lib':'Could not load a library: is there a connection?','err.save':'Could not save the project in the browser','err.key':'Your AI key is missing. Press the «AI» button at the top.','err.badkey':'{0} does not recognise your key. Check it in the «AI» button.','err.model':'Your key has no access to the model «{0}». Choose another in the «AI» button.','err.quota':'Your {0} account has no credit or has reached its limit.','err.net':'There is no connection to {0}.','err.busy':'{0} is not responding right now. Try again in a moment.','err.blocked':'The provider blocked the answer ({0}). Rephrase your request.','err.json':'The AI did not return the expected format. Try again.',
+'need.ambito':'First choose your field in phase 1.','refs.found':'The tutor mentioned {0} reference(s). Check them in the original source (phase 7).','rev.short':'Paste at least 30 words of your draft.','def.short':'Write an answer of at least 10 words.',
+'dec.intereses':'Which areas or topics interest you?','dec.intereses.p':'The areas of your discipline that attract you most…','dec.experiencia':'Any course, experience or earlier topic you want to relate to your work?','dec.experiencia.p':'Courses, placements, jobs, readings…',
+'dec.tema':'Write the topic or line of research you want to develop','dec.tema.h':'You can pick a proposal, modify it or write your own.','dec.tema.p':'My topic is…',
+'dec.problema':'Central problem of your work','dec.problema.h':'In your own words: what underlying problem or question do you want to address?','dec.problema.p':'The central problem is…','dec.fuera':'What you leave out','dec.fuera.h':'Narrowing down means deciding what you will not cover.','dec.fuera.p':'I will not cover…',
+'dec.pregunta':'Write the research question you will use','dec.pregunta.h':'One clear question that guides the whole work.','dec.pregunta.p':'My research question is…',
+'dec.objGeneral':'General objective','dec.objGeneral.p':'The general objective is…','dec.objEsp':'Specific objectives (one per line)','dec.objEsp.h':'Between 3 and 5, consistent with the question.','dec.objEsp.p':'1. …',
+'dec.hipotesis':'Your hypothesis (if applicable)','dec.hipotesis.h':'Leave it empty if your work does not need one.','dec.hipotesis.p':'My hypothesis is…',
+'dec.metodo':'Approach and methodology you will follow','dec.metodo.h':'What you will do, with which methods and why.','dec.metodo.p':'I will follow…','dec.fuentes':'Your source plan','dec.fuentes.h':'Which kinds of sources, where you will look for them and the criteria to choose them.','dec.fuentes.p':'I will search in…',
+'dec.indice':'Outline of your work (one chapter per line)','dec.indice.h':'With a line on the function of each chapter, if you can.','dec.indice.p':'1. Introduction…',
+'orig.propia':'Written by you','orig.ia-elegida':'AI proposal, chosen','orig.ia-editada':'AI proposal, edited','st.ok':'Confirmed','st.mod':'Modified after confirming','st.pend':'Not confirmed',
+'b.usar':'Use as a starting point','b.usarSel':'Use this one','b.copiado':'Copied to the box below. Edit it in your own words and confirm.','thinking':'The tutor is thinking…',
+'o.problema':'Problem','o.pregunta':'Initial question','o.cuestiones':'Issues','o.dificultades':'Difficulties','o.alcance':'Scope','o.paraDecidir':'Questions to decide','o.general':'General objective','o.especificos':'Specific objectives','o.coherencia':'Consistency','o.pregEst':'Question for you','o.funcion':'Role','o.aviso':'This answer is AI guidance, not a decision. Check anything it mentions in the original sources.','o.refs':'References mentioned — check them: {0}',
+'amb.tipo':'What kind of work do you plan to do?','amb.otro':'Describe your field or discipline','amb.otroph':'E.g.: Musicology, Environmental sciences…','amb.sel':'Choose a type…',
+'chat.tu':'You','chat.tutor':'Tutor','chat.vacio':'Ask me anything about your work: how to narrow the topic, which methodology to choose, how to structure an argument… I will guide you, but I will not write it for you.',
+'rev.h':'Review','rev.sin':'Untitled section','rev.pal':'{0} words','rev.vacio':'You have not asked for any review yet.',
+'def.vacio':'Press «Panel question» to start.','def.resp':'Your answer','def.analiza':'Analyse my answer','def.eval':'Tutor\'s analysis','def.mix':'Varied (any topic)','def.pregN':'Question {0}',
+'prog.h':'Your journey','prog.hecho':'done','prog.pend':'pending','prog.de':'{0} of {1} milestones','hit.perfil':'Profile and field defined','hit.inicio':'Starting point saved','hit.tema':'Topic and problem confirmed','hit.pregunta':'Question and general objective confirmed','hit.diseno':'Methodology and outline confirmed','hit.revision':'At least one draft review','hit.defensa':'At least one defence question answered','hit.informe':'Report downloaded',
+'aut.dec':'Decision','aut.valor':'What you wrote','aut.origen':'Origin','aut.estado':'Status','aut.vacio':'You have not confirmed any decision yet.','aut.hist':'Decision log','aut.histok':'intact ({0} entries)','aut.histko':'NOT intact: the log was modified','aut.resumen':'{0} written by you · {1} edited from proposals · {2} proposals chosen',
+'ref.vacio':'The AI has not mentioned any specific reference yet.','ref.tipo':'Type','ref.ref':'Reference','ref.est':'Status','ref.fase':'Phase','ref.doi':'DOI','ref.juris':'Ruling','ref.norma':'Law','ref.autor':'Author-year','ref.si':'DOI found','ref.no':'DOI NOT found: probably invented','ref.q':'Could not be checked','ref.pend':'Checking…','ref.comprobar':'Check in the official source','ref.recheck':'Re-check DOIs',
+'uso.h':'{0} AI queries with {1}','uso.sin':'You have not used the AI yet.','uso.fase':'Phase','uso.n':'Queries','uso.nota':'Only the date, phase and model are logged, not the content.',
+'decl.borrador':'I have used generative artificial intelligence tools ({0}) as support in preparing this work, specifically for {1}. In total I made {2} queries. The decisions on the topic, research question, objectives, methodology and structure are mine, and I wrote the text of the work myself. I checked the references I used in the original sources.',
+'decl.fases':'guidance on: {0}','decl.nada':'I have not used artificial intelligence tools.',
+'fase.inicio':'starting point','fase.tema':'topic','fase.pregunta':'question and objectives','fase.diseno':'design','fase.revision':'draft review','fase.defensa':'defence preparation','fase.chat':'free queries',
+'borrar.conf':'The current project will be deleted from this browser. Did you download the JSON first? Continue?','imp.conf':'The current project will be replaced by the one in the file. Continue?','imp.ok':'Project opened','imp.bad':'Not a MentorIA project','imp.hash':'Warning: the file fingerprint does not match; it was modified after export.','ejemplo.nota':'You are viewing an example project. Start your own from scratch whenever you like.','ejemplo.btn':'Start my own',
+'inicio.cont':'You have a project in this browser: <b>{0}</b>. <button class="btn btn-ghost btn-sm" id="btnCont" type="button">Continue</button>','inicio.cont0':'untitled project',
+'hip.no':'(in your field it is usually not needed)','hip.si':'(in your field it is usually required)','hip.opcional':'(optional)',
+'nav0':'Start','nav1':'Next: topic','nav2':'Next: question','nav3':'Next: design','nav4':'Next: review','nav5':'Next: defence','nav6':'Next: report','nav7':'Back to start',
+'hint0':'Try the <b>example project</b>: it works without a key.','hint1':'Choose your field: it is what adapts the tutor most.','hint2':'Write the topic yourself; the tutor only suggests.','hint3':'One question, one general objective and several specific ones.','hint4':'Methodology, sources and outline.','hint5':'Paste a fragment: the tutor points out, it does not rewrite.','hint6':'Answer in your own words; there is no numerical grade.','hint7':'Download the report and the JSON of your project.',
+'st.nombre':['Start','Profile','Topic','Question','Design','Review','Defence','Report'],
+'fase.titulos':['Starting point','Topic','Question and objectives','Design','Review','Defence','Report'],'fase.desc':['Interests, field and degree','Possible lines and central problem','Question, objectives and hypothesis','Methodology, sources and outline','Feedback on your drafts','Panel questions','Progress and hand-in to your tutor'],
+'rp.titulo':'Work progress report','rp.estudiante':'Student','rp.tutor':'Tutor','rp.titulacion':'Degree','rp.ambito':'Field','rp.nivel':'Type of work','rp.fecha':'Report date','rp.prog':'Progress','rp.dec':'Student\'s decisions','rp.rev':'Draft reviews requested','rp.def':'Defence preparation','rp.refs':'References mentioned by the AI (to be checked by the student)','rp.uso':'Use of AI','rp.decl':'Student\'s AI-use statement','rp.integ':'Integrity','rp.huella':'Project fingerprint','rp.nota':'This report is generated by MentorIA from what the student has written and confirmed. The AI acted only as a virtual tutor; academic supervision belongs to the work\'s tutor.','rp.sinDecl':'(the student has not written a statement)','rp.pregunta':'Panel question','rp.respuesta':'Student\'s answer','rp.analisis':'Virtual tutor\'s analysis','rp.sinRev':'No reviews.','rp.sinDef':'No defence questions.','rp.sinRefs':'None.','rp.modificado':'modified after confirming','rp.autoria':'Origin of the decisions'
+});
+const DEF_EN={derecho:['the originality and contribution of the work','a legal argument against the one defended','case law or scholarship that disagrees','the feasibility of the improvement proposal'],economia:['the validity of the data and the sample','causality versus correlation','the limitations of the methodology','the applicability of the conclusions'],educacion:['the theoretical grounding of the proposal','how its effectiveness would be evaluated','the ethical considerations','feasibility in a real setting'],experimentales:['the design and controls of the experiment','the choice of statistical methods','sources of error and limitations','an alternative interpretation of the results'],salud:['the PICO question and the search strategy','bias and the quality of the evidence','implications for practice','ethical and data-protection aspects'],ingenieria:['why this solution and not another','how you validated that it works','limitations and future work','security, cost or sustainability'],arte:['the choice of references','consistency between intention and result','the method of analysis or of the project','the originality of the contribution'],otro:['the contribution of the work','the limitations','the methodology','the implications']};
+const GLOS_T={es:[['¿Para qué sirve MentorIA?','Para pensar, investigar, argumentar, revisar y tomar decisiones como investigador o investigadora: te ayuda a elegir tema, formular la pregunta, diseñar el trabajo, revisar tus borradores y preparar la defensa.'],['¿Escribe mi trabajo?','No. El tutor está configurado para no escribirlo. Te propone opciones, hace preguntas y señala carencias. El texto, las decisiones y la responsabilidad son tuyos.'],['Procedencia de cada decisión','Cuando confirmas una decisión, MentorIA compara tu texto con lo que respondió la IA y anota si es tuyo, si es una propuesta elegida o una propuesta editada. Aparece en el informe para tu tutor.'],['Referencias','Si la IA menciona una ley, sentencia, DOI o cita de autor, se señala. Los DOI se consultan en Crossref. Nada de lo que cite la IA debe usarse sin comprobarlo en la fuente original.'],['Tu clave de IA','Funciona con OpenAI, Google Gemini o Anthropic Claude. Tú pones tu clave y pagas tu uso. Se guarda solo en este navegador.'],['Privacidad','Tu proyecto se guarda en este navegador. Lo que escribes al tutor y tus decisiones confirmadas viajan a tu proveedor de IA. No pegues datos personales de terceros ni datos clínicos identificables.'],['Registro con huellas','Cada decisión confirmada queda en un registro encadenado con huellas. Detecta cambios hechos después en el fichero, pero no es una prueba infalible: es una señal de transparencia.'],['Idiomas','La interfaz está en español e inglés y el tutor responde en el idioma que elijas.']],
+ en:[['What is MentorIA for?','To think, research, argue, review and make decisions as a researcher: it helps you choose a topic, formulate the question, design the work, review your drafts and prepare your defence.'],['Does it write my work?','No. The tutor is set up not to write it. It offers options, asks questions and points out gaps. The text, the decisions and the responsibility are yours.'],['Origin of each decision','When you confirm a decision, MentorIA compares your text with what the AI answered and records whether it is yours, a chosen proposal or an edited proposal. It appears in the report for your tutor.'],['References','If the AI mentions a law, ruling, DOI or author citation, it is flagged. DOIs are looked up on Crossref. Nothing the AI cites should be used without checking the original source.'],['Your AI key','It works with OpenAI, Google Gemini or Anthropic Claude. You supply your key and pay for your own usage. It is stored only in this browser.'],['Privacy','Your project is saved in this browser. What you write to the tutor and your confirmed decisions go to your AI provider. Do not paste third parties\' personal data or identifiable clinical data.'],['Fingerprint log','Each confirmed decision goes into a chained log with fingerprints. It detects later changes to the file, but it is not infallible proof: it is a transparency signal.'],['Languages','The interface is in Spanish and English, and the tutor answers in the language you choose.']]};
+const IDIOMAS_TUTOR=['Español','English','Català / Valencià','Français','Deutsch','Italiano','Português','Română','Polski','Nederlands','العربية','中文'];
+
+/* ══════════ PERFILES POR ÁMBITO ══════════ */
+const PERFILES=[
+ {id:'derecho',ic:'scale',c:'#6B4FD8',n:{es:'Derecho y ciencias jurídicas',en:'Law and legal studies'},d:{es:'Problema jurídico, normativa, jurisprudencia y doctrina.',en:'Legal problem, legislation, case law and scholarship.'},
+  problema:'problema jurídico',hip:'opcional',
+  enfoque:'Trabajo jurídico: se parte de un problema jurídico que se analiza con normativa, jurisprudencia y doctrina, y se argumenta con rigor. Las normas, sentencias y resoluciones deben comprobarse siempre en las fuentes oficiales (boletines oficiales, bases de jurisprudencia, EUR-Lex, etc.).',
+  fuentes:'normativa, jurisprudencia, doctrina científica, resoluciones administrativas y derecho comparado o de la Unión Europea',
+  metodos:'método dogmático-jurídico, análisis jurisprudencial, derecho comparado, estudio de caso o propuesta de reforma (de lege ferenda)',
+  estructura:'introducción y justificación; marco normativo; análisis jurídico (doctrina y jurisprudencia); propuesta de mejora; conclusiones',
+  etica:'Si se usan casos reales, protección de datos y anonimización.',
+  tipos:[['Análisis jurídico de una institución o norma','Legal analysis of an institution or rule'],['Estudio de jurisprudencia','Case-law study'],['Derecho comparado','Comparative law'],['Caso práctico o supuesto real','Practical case study'],['Propuesta de reforma','Reform proposal']],
+  defensa:['la originalidad y la aportación del trabajo','un argumento jurídico contrario al defendido','jurisprudencia o doctrina que discrepe','la viabilidad de la propuesta de mejora']},
+ {id:'economia',ic:'chart',c:'#1F6FB2',n:{es:'Economía, empresa y ciencias sociales',en:'Economics, business and social sciences'},d:{es:'Problema económico, empresarial o social; teoría y evidencia.',en:'Economic, business or social problem; theory and evidence.'},
+  problema:'problema de investigación o de gestión',hip:'si',
+  enfoque:'Trabajo de ciencias sociales: se parte de una pregunta o problema (económico, empresarial, social o de gestión pública), se fundamenta en teoría y evidencia y se aplica una metodología cuantitativa, cualitativa o mixta. Cuida la calidad de los datos, la diferencia entre correlación y causalidad y las fuentes estadísticas oficiales.',
+  fuentes:'literatura científica, datos y estadísticas oficiales, informes institucionales y sectoriales, normativa',
+  metodos:'revisión de literatura, análisis estadístico o econométrico, estudio de caso, encuesta, entrevistas, análisis financiero',
+  estructura:'introducción; marco teórico; metodología y datos; resultados; discusión; conclusiones y limitaciones',
+  etica:'Consentimiento informado y protección de datos si hay encuestas o entrevistas.',
+  tipos:[['Revisión de literatura','Literature review'],['Estudio empírico con datos','Empirical study with data'],['Estudio de caso (empresa u organización)','Case study (firm or organisation)'],['Plan de empresa o proyecto','Business or project plan'],['Análisis de políticas','Policy analysis']],
+  defensa:['la validez de los datos y de la muestra','la causalidad frente a la correlación','las limitaciones de la metodología','la aplicabilidad de las conclusiones']},
+ {id:'educacion',ic:'users',c:'#0E8C7A',n:{es:'Educación, psicología y ciencias del comportamiento',en:'Education, psychology and behavioural sciences'},d:{es:'Intervención o investigación educativa y psicológica.',en:'Educational and psychological intervention or research.'},
+  problema:'problema o necesidad educativa o psicológica',hip:'opcional',
+  enfoque:'Trabajo de educación y ciencias del comportamiento: se fundamenta en teoría y evidencia, y puede ser una revisión, una investigación empírica o el diseño de una intervención o propuesta didáctica. Cuida el marco teórico, la coherencia entre objetivos, metodología y evaluación, y la ética con menores y datos personales.',
+  fuentes:'literatura científica (bases de datos educativas y psicológicas), currículo y normativa educativa, instrumentos validados, informes institucionales',
+  metodos:'revisión sistemática o narrativa, diseño de intervención, estudio con cuestionarios o escalas, investigación cualitativa, investigación-acción',
+  estructura:'introducción y justificación; marco teórico; diseño y metodología; resultados o desarrollo de la propuesta; discusión; conclusiones y limitaciones',
+  etica:'Consentimiento informado, protección de menores y de datos personales; aprobación ética cuando proceda.',
+  tipos:[['Propuesta de intervención o programa didáctico','Intervention or teaching programme'],['Revisión bibliográfica','Literature review'],['Estudio empírico (cuestionarios, escalas)','Empirical study (surveys, scales)'],['Investigación cualitativa','Qualitative research'],['Estudio de caso','Case study']],
+  defensa:['la fundamentación teórica de la propuesta','cómo se evaluaría su eficacia','las consideraciones éticas','la viabilidad en un contexto real']},
+ {id:'experimentales',ic:'leaf',c:'#C98200',n:{es:'Ciencias experimentales y de la vida',en:'Experimental and life sciences'},d:{es:'Hipótesis, diseño experimental, análisis de datos.',en:'Hypothesis, experimental design, data analysis.'},
+  problema:'pregunta científica',hip:'si',
+  enfoque:'Trabajo científico: se parte de una pregunta e hipótesis contrastables, se diseña un experimento, observación o revisión sistemática, se analizan los datos con métodos estadísticos adecuados y se discuten los resultados y sus limitaciones. Cuida la reproducibilidad, los controles y la distinción entre resultado e interpretación.',
+  fuentes:'artículos científicos revisados por pares, bases de datos científicas, protocolos y normas técnicas, repositorios de datos',
+  metodos:'diseño experimental, trabajo de laboratorio o de campo, análisis de datos, bioinformática, revisión sistemática, modelización',
+  estructura:'resumen; introducción e hipótesis; materiales y métodos; resultados; discusión; conclusiones; bibliografía',
+  etica:'Bioseguridad, bienestar animal, comités de ética y gestión de datos cuando proceda.',
+  tipos:[['Trabajo experimental','Experimental work'],['Revisión sistemática o bibliográfica','Systematic or literature review'],['Análisis de datos existentes','Analysis of existing data'],['Trabajo de campo','Field work'],['Modelización o simulación','Modelling or simulation']],
+  defensa:['el diseño y los controles del experimento','la elección de los métodos estadísticos','las fuentes de error y limitaciones','la interpretación alternativa de los resultados']},
+ {id:'salud',ic:'pulse',c:'#E4572E',n:{es:'Ciencias de la salud y del deporte',en:'Health and sport sciences'},d:{es:'Evidencia clínica, pregunta PICO, ética con personas.',en:'Clinical evidence, PICO question, ethics with people.'},
+  problema:'problema o pregunta clínica o de salud',hip:'opcional',
+  enfoque:'Trabajo de ciencias de la salud y del deporte: se parte de una pregunta clínica o de salud (por ejemplo en formato PICO), se busca y valora la mejor evidencia disponible y se discuten sus límites. Puede ser revisión sistemática o narrativa, estudio observacional o experimental, caso clínico o programa de intervención. Nunca ofrezcas consejo clínico individual: orienta sobre método, no sobre tratamiento de personas concretas.',
+  fuentes:'bases de datos biomédicas, revisiones sistemáticas, guías de práctica clínica, ensayos y estudios observacionales, normas de comunicación de estudios (PRISMA, CONSORT, STROBE, CARE)',
+  metodos:'revisión sistemática o narrativa, estudio observacional, estudio experimental o cuasiexperimental, caso clínico, diseño de programa de intervención',
+  estructura:'resumen; introducción y justificación; objetivos; metodología (estrategia de búsqueda o diseño); resultados; discusión; conclusiones; limitaciones',
+  etica:'Aprobación de un comité de ética de la investigación, consentimiento informado y protección reforzada de los datos de salud.',
+  tipos:[['Revisión sistemática','Systematic review'],['Revisión narrativa','Narrative review'],['Estudio observacional','Observational study'],['Caso clínico','Case report'],['Programa de intervención','Intervention programme']],
+  defensa:['la pregunta PICO y la estrategia de búsqueda','el sesgo y la calidad de la evidencia','las implicaciones para la práctica','los aspectos éticos y de protección de datos']},
+ {id:'ingenieria',ic:'cpu',c:'#5D7691',n:{es:'Ingeniería y tecnología',en:'Engineering and technology'},d:{es:'Necesidad técnica, diseño, implementación y validación.',en:'Technical need, design, implementation and validation.'},
+  problema:'necesidad o problema técnico',hip:'no',
+  enfoque:'Trabajo de ingeniería y tecnología: se parte de una necesidad o problema técnico, se establecen requisitos, se analiza el estado del arte, se diseña e implementa una solución y se valida con pruebas o métricas. Cuida la justificación de las decisiones de diseño, las alternativas descartadas, las pruebas y la reproducibilidad.',
+  fuentes:'normas técnicas, documentación oficial, artículos científicos y técnicos, patentes, repositorios y herramientas de referencia',
+  metodos:'ciclo de desarrollo (requisitos, diseño, implementación, pruebas), prototipado, simulación, comparación de alternativas, medición experimental',
+  estructura:'introducción y requisitos; estado del arte; diseño; implementación; pruebas y validación; conclusiones y trabajo futuro',
+  etica:'Seguridad, privacidad, licencias del software y componentes, y sostenibilidad cuando proceda.',
+  tipos:[['Desarrollo de un sistema o aplicación','System or application development'],['Diseño y cálculo de una solución','Design and calculation of a solution'],['Comparación de tecnologías o métodos','Comparison of technologies or methods'],['Análisis de datos o aprendizaje automático','Data analysis or machine learning'],['Estudio de viabilidad','Feasibility study']],
+  defensa:['por qué se eligió esta solución y no otra','cómo se validó que funciona','las limitaciones y el trabajo futuro','la seguridad, el coste o la sostenibilidad']},
+ {id:'arte',ic:'building',c:'#6B4FD8',n:{es:'Arquitectura, diseño, comunicación y humanidades',en:'Architecture, design, communication and humanities'},d:{es:'Proyecto o análisis crítico con fuentes y referentes.',en:'Project or critical analysis with sources and references.'},
+  problema:'problema o pregunta de investigación o de proyecto',hip:'no',
+  enfoque:'Trabajo de arquitectura, diseño, comunicación o humanidades: puede ser un análisis crítico fundamentado en fuentes primarias y secundarias, o un proyecto (arquitectónico, de diseño, comunicativo, creativo) con memoria justificativa y referentes. Cuida el argumento, los referentes, la coherencia entre intención, proceso y resultado y la cita correcta de fuentes.',
+  fuentes:'fuentes primarias y archivos, bibliografía crítica, referentes de proyecto, normativa aplicable, entrevistas y observación',
+  metodos:'análisis crítico o histórico, análisis de discurso o de contenido, estudio de referentes, proceso de proyecto, entrevistas y trabajo de campo',
+  estructura:'introducción y justificación; marco teórico y referentes; metodología o proceso; desarrollo del análisis o del proyecto; conclusiones',
+  etica:'Derechos de autor, uso de imágenes y datos de terceros, consentimiento en entrevistas.',
+  tipos:[['Análisis crítico o histórico','Critical or historical analysis'],['Proyecto con memoria justificativa','Project with design statement'],['Análisis de medios o de discurso','Media or discourse analysis'],['Estudio de referentes y propuesta','Study of references and proposal'],['Trabajo de campo o entrevistas','Field work or interviews']],
+  defensa:['la elección de los referentes','la coherencia entre intención y resultado','el método de análisis o de proyecto','la originalidad de la aportación']},
+ {id:'otro',ic:'compass',c:'#8FA7BE',n:{es:'Otro ámbito',en:'Other field'},d:{es:'Descríbelo y el tutor se adaptará.',en:'Describe it and the tutor will adapt.'},
+  problema:'problema o pregunta de investigación',hip:'opcional',
+  enfoque:'Adáptate al ámbito que describa el estudiante y a las convenciones habituales de su disciplina.',
+  fuentes:'las fuentes habituales de la disciplina del estudiante',metodos:'las metodologías habituales de la disciplina del estudiante',
+  estructura:'introducción y justificación; marco teórico; metodología; desarrollo; conclusiones',etica:'Las consideraciones éticas propias de la disciplina, si las hubiera.',
+  tipos:[['Revisión bibliográfica','Literature review'],['Estudio empírico','Empirical study'],['Estudio de caso','Case study'],['Proyecto o propuesta','Project or proposal']],
+  defensa:['la aportación del trabajo','las limitaciones','la metodología','las implicaciones']}];
+const perfilAct=()=>PERFILES.find(p=>p.id===P.perfil.ambito)||PERFILES.at(-1);
+const NIVEL_T={TFG:'Trabajo Fin de Grado (TFG)',TFM:'Trabajo Fin de Máster (TFM)',Otro:'trabajo académico'};
+
+/* ══════════ INSTRUCCIONES AL TUTOR (a partir del cuaderno de I. Martínez Quiles) ══════════ */
+function sysPrompt(){
+  const pf=perfilAct(),pr=P.perfil,amb=pr.ambito==='otro'&&pr.otro?`${pf.n.es}: ${pr.otro}`:pf.n.es;
+  return `Actúa como tutor/a virtual para la elaboración del ${NIVEL_T[pr.nivel]||NIVEL_T.Otro}${pr.titulacion?` de ${pr.titulacion}`:''}${pr.centro?` (${pr.centro})`:''}.
+Ámbito disciplinar: ${amb}. ${pf.enfoque}
+Tu función es acompañar al estudiante en las fases de elaboración de su trabajo: identificar sus intereses, generar posibles temas, delimitarlos, identificar el ${pf.problema}, formular preguntas de investigación, establecer objetivos${pf.hip==='no'?'':' e hipótesis cuando resulte adecuado'}, seleccionar una metodología, planificar la búsqueda de fuentes (${pf.fuentes}), proponer una estructura razonada, revisar argumentos del estudiante, detectar carencias, formular propuestas de mejora, revisar el progreso y preparar la defensa oral.
+Principios obligatorios:
+- Eres tutor/a y orientador/a, NO autor/a del trabajo. Si el estudiante te pide que escribas capítulos, párrafos, el resumen o el trabajo, explícale con amabilidad que no lo harás y ofrécele preguntas, criterios y ejemplos de enfoque para que lo escriba él o ella.
+- Fomenta el pensamiento crítico, la autonomía y la capacidad de argumentación del estudiante.
+- No inventes leyes, sentencias, artículos, autores, DOI ni referencias bibliográficas. Si no estás seguro de que una fuente exista, no la menciones: describe el tipo de fuente que debería buscar y dónde. Cuando menciones una fuente concreta, recuerda que debe comprobarse en la fuente original.
+- Cuando exista más de una posibilidad razonable, preséntalas y explica sus diferencias en lugar de decidir automáticamente por el estudiante.
+- No pongas notas numéricas ni anticipes calificaciones.
+- La supervisión académica corresponde al tutor o tutora del trabajo; recuérdalo cuando proceda.
+- ${pf.etica} Si el trabajo implica personas, datos personales o animales, recuerda las obligaciones éticas y de protección de datos.
+- Usa un lenguaje académico, claro y adecuado al nivel. Responde SIEMPRE en ${pr.idiomaTutor||'español'}.`;
+}
+const ctxProy=()=>[['Intereses',D('intereses')],['Experiencia o conocimientos previos',D('experiencia')],['Tipo de trabajo',P.perfil.tipo],['Tema',D('tema')],['Problema central',D('problema')],['Queda fuera del alcance',D('fuera')],['Pregunta de investigación',D('pregunta')],['Objetivo general',D('objGeneral')],['Objetivos específicos',D('objEsp')],['Hipótesis',D('hipotesis')],['Enfoque y metodología',D('metodo')],['Plan de fuentes',D('fuentes')],['Índice',D('indice')]].filter(([,v])=>String(v||'').trim()).map(([k,v])=>`${k}:\n${v}`).join('\n\n')||'(el estudiante aún no ha confirmado ninguna decisión)';
+const J_LINEAS='{"lineas":[{"titulo":"","problema":"","pregunta":"","cuestiones":[""],"dificultades":[""]}]}';
+const PROMPTS={
+  analisis:()=>({txt:true,m:`El estudiante ha proporcionado esta información.\n\nINTERESES:\n${D('intereses')}\n\nEXPERIENCIA O CONOCIMIENTOS PREVIOS:\n${D('experiencia')}\n\nTIPO DE TRABAJO QUE LE ATRAE: ${P.perfil.tipo||'(sin indicar)'}\n\nAnaliza esta información y:\n1. Identifica las principales áreas de interés.\n2. Señala posibles líneas de investigación.\n3. Explica qué cuestiones (${perfilAct().problema}s) podrían aparecer.\n4. Formula preguntas que ayuden al estudiante a concretar sus intereses.\nNo selecciones un tema definitivo.`}),
+  lineas:()=>({json:true,m:`A partir de la siguiente información del estudiante:\n\n${ctxProy()}\n\nPropón 5 posibles líneas de investigación adecuadas a su ámbito y tipo de trabajo. Para cada una indica: título provisional ("titulo"), ${perfilAct().problema} ("problema"), pregunta de investigación inicial ("pregunta"), principales cuestiones que habría que estudiar ("cuestiones", lista) y posibles dificultades ("dificultades", lista).\nNo presentes ninguna propuesta como la elección definitiva.\nDevuelve solo JSON con esta forma: ${J_LINEAS}`}),
+  cuestiones:()=>({txt:true,m:`El estudiante quiere investigar:\n\n${D('tema')}\n\nContexto del proyecto:\n${ctxProy()}\n\nAyúdale a transformar este tema general en cuestiones concretas. Identifica:\n1. ${perfilAct().problema[0].toUpperCase()+perfilAct().problema.slice(1)} principal.\n2. Problemas o cuestiones secundarias.\n3. Fuentes o materiales que previsiblemente debería consultar (${perfilAct().fuentes}), sin inventar referencias concretas.\n4. Cuestiones teóricas, doctrinales o metodológicas que debería conocer.\n5. Aspectos que deberían quedar fuera del trabajo para evitar que el tema sea demasiado amplio.\nTermina con 3 preguntas para que el estudiante decida.`}),
+  preguntas:()=>({json:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nPropón varias formulaciones posibles (3 o 4) de la pregunta principal de investigación. Para cada una explica brevemente qué estudia y qué alcance tendría. Después formula preguntas que permitan al estudiante decidir cuál representa mejor el trabajo que quiere realizar.\nDevuelve solo JSON: {"formulaciones":[{"pregunta":"","alcance":""}],"preguntas_al_estudiante":[""]}`}),
+  objetivos:()=>({json:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nFormula un objetivo general y entre 3 y 5 objetivos específicos. Comprueba después si existe coherencia entre la pregunta de investigación y los objetivos; si detectas alguna incoherencia, explícasela al estudiante y formula una pregunta para que pueda corregirla.\nDevuelve solo JSON: {"general":"","especificos":[""],"coherencia":"","pregunta_al_estudiante":""}`}),
+  coherencia:()=>({txt:true,m:`Contexto del proyecto, tal como lo ha confirmado el estudiante:\n${ctxProy()}\n\nComprueba la coherencia entre la pregunta de investigación, el objetivo general y los objetivos específicos${D('hipotesis')?', y la hipótesis':''}. Señala incoherencias, solapamientos, objetivos que no se pueden alcanzar con la metodología prevista y objetivos que faltan. No reescribas los objetivos por él: formula preguntas y orientaciones para que los corrija.`}),
+  hipotesis:()=>({txt:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nEl estudiante quiere valorar si su trabajo necesita una hipótesis${perfilAct().hip==='si'?' (en su ámbito suele ser necesaria)':''}. Explica cuándo procede y cuándo no en su caso, qué características debe tener una buena hipótesis (contrastable, concreta, coherente con la pregunta) y propón 2 ejemplos de enfoque, no de redacción definitiva. Si la ha escrito${D('hipotesis')?`: «${D('hipotesis')}»`:''}, valórala con criterios.`}),
+  metodo:()=>({txt:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nAyuda al estudiante a plantear una metodología adecuada a su ámbito (posibilidades habituales: ${perfilAct().metodos}). Explica: enfoque de investigación o de trabajo; tipo de análisis o diseño; fuentes o datos necesarios y criterios para seleccionarlos; consideraciones éticas si proceden; y posibles limitaciones. Presenta alternativas y sus diferencias. No inventes fuentes concretas.`}),
+  fuentes:()=>({txt:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nAyuda al estudiante a planificar la búsqueda de fuentes (${perfilAct().fuentes}). Indica: tipos de fuentes que necesita y para qué; dónde buscarlas (tipos de bases de datos, repositorios o boletines oficiales; sin inventar títulos); términos de búsqueda que podría probar; criterios para seleccionar y valorar fuentes; y cómo registrar lo que encuentra. No cites referencias concretas.`}),
+  indice:()=>({json:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nEstructura habitual en su ámbito: ${perfilAct().estructura}.\nPropón una estructura razonada del trabajo. Debe responder a la pregunta de investigación, estar relacionada con los objetivos, seguir una progresión lógica y evitar capítulos que no contribuyan directamente al objeto del trabajo. Explica brevemente la función de cada capítulo.\nDevuelve solo JSON: {"capitulos":[{"titulo":"","funcion":""}],"nota":""}`}),
+  indiceRev:()=>({txt:true,m:`Contexto del proyecto:\n${ctxProy()}\n\nRevisa el índice que ha escrito el estudiante. Comprueba si responde a la pregunta, si cubre todos los objetivos, si la progresión es lógica y si hay capítulos innecesarios o ausentes. No lo reescribas: señala y pregunta.`})
+};
+async function pideIA(key,fase){
+  if(!P.perfil.ambito)return toast(t('need.ambito'));
+  if(busy)return;busy=true;pintaBusy(key,true);
+  try{
+    const pr=PROMPTS[key](),msgs=[{role:'system',content:sysPrompt()},{role:'user',content:pr.m}];let texto;
+    if(pr.json){const j=await llmJSON(msgs,{max:3200});texto=JSON.stringify(j);P.out[key]={json:j,t:iso()}}
+    else{texto=await llm(msgs,{max:2800});P.out[key]={texto,t:iso()}}
+    const n=await registraIA(fase,key,texto);if(n)toast(t('refs.found',n),6000);
+  }catch(e){toast(e.message,9000)}
+  finally{busy=false;pintaBusy(key,false);pintaTodo()}
+}
+let busy=false;
+async function pideRevision(){
+  const sec=$('revSec').value.trim(),txt=$('revTxt').value.trim();
+  if(!P.perfil.ambito)return toast(t('need.ambito'));if(wc(txt)<30)return toast(t('rev.short'));if(busy)return;busy=true;pintaBusy('rev',true);
+  try{
+    const m=`Contexto del proyecto:\n${ctxProy()}\n\nEl estudiante ha escrito este fragmento de su trabajo${sec?` (sección: ${sec})`:''}:\n\n«««\n${txt}\n»»»\n\nActúa como tutor. NO reescribas el texto ni propongas redacciones alternativas completas. Señala, citando brevemente las frases o párrafos concretos a los que te refieres:\n1. Claridad.\n2. Argumentación y razonamiento.\n3. Coherencia con la pregunta de investigación y los objetivos.\n4. Uso y necesidad de fuentes (${perfilAct().fuentes}), sin inventar referencias.\n5. Estructura y progresión de las ideas.\n6. Estilo y lenguaje técnico.\nPara cada punto indica fortalezas, carencias y una pregunta que el estudiante debería responderse. Termina con 3 acciones concretas de mejora. Sin nota numérica.`;
+    const fb=await llm([{role:'system',content:sysPrompt()},{role:'user',content:m}],{max:2800});
+    P.rev.unshift({id:uid('r'),t:iso(),seccion:sec,palabras:wc(txt),texto:txt,feedback:fb});$('revTxt').value='';
+    const n=await registraIA('revision','revision',fb);if(n)toast(t('refs.found',n),6000);
+  }catch(e){toast(e.message,9000)}finally{busy=false;pintaBusy('rev',false);pintaTodo()}
+}
+async function pidePreguntaTribunal(){
+  if(!P.perfil.ambito)return toast(t('need.ambito'));if(busy)return;busy=true;pintaBusy('def',true);
+  try{
+    const tipo=$('defTipo').value,pf=perfilAct();
+    const j=await llmJSON([{role:'system',content:sysPrompt()},{role:'user',content:`El estudiante está preparando la defensa de su trabajo.\n\n${ctxProy()}\n\nActúa como miembro de un tribunal académico. Formula UNA pregunta que podría hacerse durante la defensa${tipo&&tipo!=='mix'?`, centrada en: ${tipo}`:' (varía el enfoque; temas posibles: '+pf.defensa.join('; ')+')'}. No proporciones todavía la respuesta.\nPreguntas anteriores (no las repitas): ${P.def.map(d=>d.preg).join(' | ')||'ninguna'}.\nDevuelve solo JSON: {"tipo":"","pregunta":""}`}],{max:600});
+    P.def.unshift({id:uid('d'),t:iso(),tipo:String(j.tipo||tipo||''),preg:String(j.pregunta||''),resp:'',eval:''});
+    await registraIA('defensa','pregunta',j.pregunta||'');
+  }catch(e){toast(e.message,9000)}finally{busy=false;pintaBusy('def',false);pintaTodo()}
+}
+async function analizaRespuesta(id){
+  const d=P.def.find(x=>x.id===id),ta=document.querySelector(`[data-defresp="${id}"]`);d.resp=ta.value.trim();
+  if(wc(d.resp)<10)return toast(t('def.short'));if(busy)return;busy=true;pintaBusy('def',true);
+  try{
+    d.eval=await llm([{role:'system',content:sysPrompt()},{role:'user',content:`Contexto del proyecto:\n${ctxProy()}\n\nPregunta del tribunal:\n${d.preg}\n\nRespuesta del estudiante:\n${d.resp}\n\nAnaliza la respuesta desde un punto de vista académico. Indica: aspectos correctamente planteados; aspectos que podrían desarrollarse mejor; posibles argumentos adicionales; posibles preguntas de seguimiento. No pongas nota numérica ni digas si aprobaría o no.`}],{max:2200});
+    const n=await registraIA('defensa','evaluacion',d.eval);if(n)toast(t('refs.found',n),6000);
+  }catch(e){toast(e.message,9000)}finally{busy=false;pintaBusy('def',false);pintaTodo()}
+}
+async function enviaChat(){
+  const inp=$('chatIn'),txt=inp.value.trim();if(!txt||busy)return;
+  if(!P.perfil.ambito)return toast(t('need.ambito'));
+  busy=true;P.chat.push({role:'user',content:txt,t:iso()});inp.value='';pintaChat(true);
+  try{
+    const hist=P.chat.slice(-14).map(m=>({role:m.role,content:m.content}));
+    const rep=await llm([{role:'system',content:sysPrompt()+`\n\nDecisiones que el estudiante ha confirmado hasta ahora:\n${ctxProy()}`},...hist],{max:2200});
+    P.chat.push({role:'assistant',content:rep,t:iso()});const n=await registraIA('chat','chat',rep);if(n)toast(t('refs.found',n),6000);
+  }catch(e){toast(e.message,9000)}finally{busy=false;pintaChat(false);guarda()}
+}
+
+/* ══════════ decisiones del estudiante ══════════ */
+async function confirma(claves){
+  let n=0;
+  for(const k of claves){
+    const v=(P.dec[k]?.valor||'').trim();if(!v)continue;
+    const o=origenDe(v);P.dec[k]={valor:v,ok:true,origen:o,t:iso()};await anota(k,v,o);n++;
+  }
+  guarda();return n;
+}
+const HITOS=[['perfil',()=>!!(P.perfil.ambito&&P.perfil.titulacion.trim())],['inicio',()=>!!P.dec.intereses?.ok],['tema',()=>!!(P.dec.tema?.ok&&P.dec.problema?.ok)],['pregunta',()=>!!(P.dec.pregunta?.ok&&P.dec.objGeneral?.ok)],['diseno',()=>!!(P.dec.metodo?.ok&&P.dec.indice?.ok)],['revision',()=>P.rev.length>0],['defensa',()=>P.def.some(d=>d.eval)],['informe',()=>!!P.informe]];
+const progreso=()=>HITOS.filter(([,f])=>f()).length;
+
+/* ── markdown mínimo y seguro ── */
+function md(s){
+  const inl=x=>esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[\s(])\*([^*\n]+)\*/g,'$1<i>$2</i>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const out=[];let lst=null;const cierra=()=>{if(lst){out.push(`</${lst}>`);lst=null}};
+  for(const raw of String(s||'').split('\n')){
+    const l=raw.trimEnd();let m;
+    if(!l.trim()){cierra();continue}
+    if(m=l.match(/^#{1,4}\s+(.*)/)){cierra();out.push(`<h4>${inl(m[1])}</h4>`);continue}
+    if(m=l.match(/^\s*[-*•]\s+(.*)/)){if(lst!=='ul'){cierra();out.push('<ul>');lst='ul'}out.push(`<li>${inl(m[1])}</li>`);continue}
+    if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){if(lst!=='ol'){cierra();out.push('<ol>');lst='ol'}out.push(`<li>${inl(m[1])}</li>`);continue}
+    cierra();out.push(`<p>${inl(l)}</p>`);
+  }
+  cierra();return out.join('');
+}
+
+/* ══════════ INTERFAZ ══════════ */
+const ta=k=>DT[LANG][k]??DT.es[k];
+const tiene=k=>DT[LANG][k]!==undefined||DT.es[k]!==undefined;
+function aplicaIdioma(){
+  document.documentElement.lang=LANG;
+  $$('[data-i18n]').forEach(el=>{if(el.dataset.es===undefined)el.dataset.es=el.innerHTML;el.innerHTML=LANG==='es'?el.dataset.es:(EN[el.dataset.i18n]??el.dataset.es)});
+  $$('[data-i18n-ph]').forEach(el=>{if(el.dataset.phEs===undefined)el.dataset.phEs=el.getAttribute('placeholder')||'';el.setAttribute('placeholder',LANG==='es'?el.dataset.phEs:(EN[el.dataset.i18nPh]??el.dataset.phEs))});
+  $('langLbl').textContent=LANG==='es'?'EN':'ES';
+  $('glos').innerHTML=GLOS_T[LANG].map(g=>`<div><b>${esc(g[0])}</b><span>${esc(g[1])}</span></div>`).join('');
+}
+$('btnLang').onclick=()=>{LANG=LANG==='es'?'en':'es';localStorage.setItem('mt_lang',LANG);if(!P.perfil.idiomaTutor||['Español','English'].includes(P.perfil.idiomaTutor))P.perfil.idiomaTutor=LANG==='en'?'English':'Español';guarda();aplicaIdioma();go(step)};
+
+/* ── navegación ── */
+let step=0;
+function buildStepper(){const nom=ta('st.nombre');$('stepper').innerHTML=nom.map((s,i)=>`${i?`<span class="sline${i<=step?' on':''}"></span>`:''}<button class="sdot" type="button" data-go="${i}" data-state="${i<step?'done':i===step?'now':''}" ${i===step?'aria-current="step"':''}><span class="n">${i<step?ico('check'):i===0?ico('compass'):i}</span><span class="lbl">${esc(s)}</span></button>`).join('');$$('#stepper [data-go]').forEach(b=>b.onclick=()=>go(+b.dataset.go))}
+function updateNav(){$('navBack').classList.toggle('hidden',step===0);$('navNextTxt').textContent=t('nav'+step);$('navHint').innerHTML=t('hint'+step)}
+function go(i){
+  step=i;$$('.screen').forEach(s=>s.classList.toggle('on',+s.dataset.step===i));$('progBar').style.width=(i/7*100)+'%';
+  montaDecs();pintaTodo();buildStepper();updateNav();window.scrollTo({top:0,behavior:'instant'});
+}
+$('navBack').onclick=()=>{if(step>0)go(step-1)};$('navNext').onclick=()=>{if(step===6&&!P.informe){}go(step===7?0:step+1)};$('goHome').onclick=()=>go(0);
+$('btnStart').onclick=()=>{if(P.ejemplo&&!confirm(t('borrar.conf')))return;if(P.ejemplo){P=nuevoP();guarda()}go(1)};
+
+/* ── decisiones del estudiante ── */
+const DECROWS={intereses:4,experiencia:4,tema:3,problema:3,fuera:3,pregunta:3,objGeneral:2,objEsp:5,hipotesis:3,metodo:5,fuentes:5,indice:7};
+const decHTML=k=>`<div class="field mt-dec"><label for="in-${k}">${esc(t('dec.'+k))}</label>${tiene('dec.'+k+'.h')?`<p class="help" style="margin:-2px 0 6px">${esc(t('dec.'+k+'.h'))}</p>`:''}<textarea id="in-${k}" rows="${DECROWS[k]}" data-in="${k}" placeholder="${esc(t('dec.'+k+'.p'))}">${esc(D(k))}</textarea><div class="mt-st" data-st="${k}"></div></div>`;
+function montaDecs(){Object.keys(DECROWS).forEach(k=>{const c=$('d-'+k);if(c)c.innerHTML=decHTML(k)});pintaSt()}
+async function pintaSt(){
+  for(const el of $$('[data-st]')){
+    const k=el.dataset.st,d=P.dec[k];if(!d||!d.valor?.trim()){el.innerHTML='';continue}
+    if(!d.ok){el.innerHTML=`<span class="mt-chip">${esc(t('st.pend'))}</span>`;continue}
+    const s=await estadoDec(k);
+    el.innerHTML=`<span class="mt-chip ${s==='ok'?'ok':'aviso'}">${esc(t(s==='ok'?'st.ok':'st.mod'))}</span><span class="mt-chip o-${d.origen}">${esc(t('orig.'+d.origen))}</span>`;
+  }
+}
+document.addEventListener('input',e=>{
+  const a=e.target.closest('[data-in]');
+  if(a){const k=a.dataset.in,d=(P.dec[k]??={valor:''});if(d.valor!==a.value){d.valor=a.value;d.ok=false}guarda();pintaSt();miniProg();return}
+  const f=e.target.closest('[data-perf]');if(f){P.perfil[f.dataset.perf]=f.value;guarda();miniProg()}
+});
+document.addEventListener('change',e=>{const f=e.target.closest('select[data-perf]');if(f){P.perfil[f.dataset.perf]=f.value;guarda();if(f.dataset.perf==='nivel'||f.dataset.perf==='idiomaTutor')return}});
+const usarMap=[];
+document.addEventListener('click',async e=>{
+  const ok=e.target.closest('[data-ok]');
+  if(ok){const n=await confirma(ok.dataset.ok.split(','));pintaSt();miniProg();toast(n?t('st.ok'):'—',1800);return}
+  const ia=e.target.closest('[data-ia]');if(ia){pideIA(ia.dataset.ia,ia.dataset.fase);return}
+  const us=e.target.closest('[data-usar]');
+  if(us){const [k,i]=us.dataset.usar.split(':'),el=$('in-'+k);if(!el)return;const tx=usarMap[+i];el.value=el.value.trim()?el.value.trim()+'\n'+tx:tx;el.dispatchEvent(new Event('input',{bubbles:true}));el.focus();toast(t('b.copiado'),3500);return}
+  const am=e.target.closest('[data-amb]');if(am){P.perfil.ambito=am.dataset.amb;P.perfil.tipo='';guarda();pintaPerfil();miniProg();return}
+});
+
+/* ── salidas del tutor ── */
+const card=h=>`<div class="mt-out">${h}</div>`;
+const regU=tx=>{usarMap.push(tx);return usarMap.length-1};
+const btnU=(k,tx,lab)=>`<button class="btn btn-ghost btn-sm" type="button" data-usar="${k}:${regU(tx)}">${esc(lab||t('b.usar'))}</button>`;
+const lista=a=>Array.isArray(a)&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';
+function refsNota(texto){const r=extraeRefs(texto);return `<p class="help mt-aviso">${esc(t('o.aviso'))}${r.length?` <b>${esc(t('o.refs',r.slice(0,5).map(x=>x.t).join(' · ')))}</b>`:''}</p>`}
+function outHTML(key){
+  const o=P.out[key];if(!o)return '';
+  if(o.texto)return card(md(o.texto)+refsNota(o.texto));
+  const j=o.json||{};let h='';
+  if(key==='lineas')h=(j.lineas||[]).map(l=>`<div class="mt-prop"><b>${esc(l.titulo)}</b><p><i>${esc(t('o.problema'))}:</i> ${esc(l.problema)}</p><p><i>${esc(t('o.pregunta'))}:</i> ${esc(l.pregunta)}</p><p><i>${esc(t('o.cuestiones'))}:</i></p>${lista(l.cuestiones)}<p><i>${esc(t('o.dificultades'))}:</i></p>${lista(l.dificultades)}<div class="actions" style="margin:6px 0 0">${btnU('tema',l.titulo)}</div></div>`).join('');
+  if(key==='preguntas')h=(j.formulaciones||[]).map(f=>`<div class="mt-prop"><b>${esc(f.pregunta)}</b><p><i>${esc(t('o.alcance'))}:</i> ${esc(f.alcance)}</p><div class="actions" style="margin:6px 0 0">${btnU('pregunta',f.pregunta,t('b.usarSel'))}</div></div>`).join('')+((j.preguntas_al_estudiante||[]).length?`<p><b>${esc(t('o.paraDecidir'))}</b></p>${lista(j.preguntas_al_estudiante)}`:'');
+  if(key==='objetivos')h=`<div class="mt-prop"><p><i>${esc(t('o.general'))}:</i> ${esc(j.general)}</p><div class="actions" style="margin:0 0 8px">${btnU('objGeneral',j.general||'')}</div><p><i>${esc(t('o.especificos'))}:</i></p>${lista(j.especificos)}<div class="actions" style="margin:0 0 8px">${btnU('objEsp',(j.especificos||[]).map((x,i)=>`${i+1}. ${x}`).join('\n'))}</div>${j.coherencia?`<p><i>${esc(t('o.coherencia'))}:</i> ${esc(j.coherencia)}</p>`:''}${j.pregunta_al_estudiante?`<p><i>${esc(t('o.pregEst'))}:</i> ${esc(j.pregunta_al_estudiante)}</p>`:''}</div>`;
+  if(key==='indice')h=`<div class="mt-prop"><ol>${(j.capitulos||[]).map(c=>`<li><b>${esc(c.titulo)}</b> — ${esc(c.funcion)}</li>`).join('')}</ol>${j.nota?`<p>${esc(j.nota)}</p>`:''}<div class="actions" style="margin:6px 0 0">${btnU('indice',(j.capitulos||[]).map((c,i)=>`${i+1}. ${c.titulo} — ${c.funcion}`).join('\n'))}</div></div>`;
+  return card(h+refsNota(JSON.stringify(j)));
+}
+const OUTS=['analisis','lineas','cuestiones','preguntas','objetivos','coherencia','hipotesis','metodo','fuentes','indice','indiceRev'];
+function pintaOuts(){usarMap.length=0;OUTS.forEach(k=>{const c=$('o-'+k);if(c)c.innerHTML=outHTML(k)})}
+function pintaBusy(key,on){
+  $$('[data-ia],#btnRev,#btnDef,#chatSend,[data-anal]').forEach(b=>b.disabled=on);
+  const c=$('o-'+key);if(c&&on)c.innerHTML=card(`<span class="spin"></span> ${esc(t('thinking'))}`);
+  if(key==='rev'&&on)$('revList').insertAdjacentHTML('afterbegin',`<div class="mt-out" id="revBusy"><span class="spin"></span> ${esc(t('thinking'))}</div>`);
+  if(key==='def'&&on)$('defList').insertAdjacentHTML('afterbegin',`<div class="mt-out" id="defBusy"><span class="spin"></span> ${esc(t('thinking'))}</div>`);
+}
+
+/* ── pantalla 1: perfil ── */
+function pintaPerfil(){
+  const pr=P.perfil,pf=perfilAct();
+  $('pTit').value=pr.titulacion;$('pCentro').value=pr.centro;$('pNivel').value=pr.nivel;$('pNombre').value=pr.nombre;$('pTutor').value=pr.tutor;
+  const sel=$('pIdioma');sel.innerHTML=IDIOMAS_TUTOR.map(i=>`<option ${i===pr.idiomaTutor?'selected':''}>${esc(i)}</option>`).join('');if(!IDIOMAS_TUTOR.includes(pr.idiomaTutor))sel.insertAdjacentHTML('afterbegin',`<option selected>${esc(pr.idiomaTutor)}</option>`);
+  $('ambitos').innerHTML=PERFILES.map(p=>`<button type="button" class="mt-amb${p.id===pr.ambito?' on':''}" data-amb="${p.id}" style="--c:${p.c}" aria-pressed="${p.id===pr.ambito}"><span class="mt-ai">${ico(p.ic)}</span><b>${esc(p.n[LANG])}</b><small>${esc(p.d[LANG])}</small></button>`).join('');
+  $('ambExtra').innerHTML=pr.ambito?`<div class="grid2" style="margin-top:14px"><div class="field"><label for="pTipo">${esc(t('amb.tipo'))}</label><select id="pTipo" data-perf="tipo"><option value="">${esc(t('amb.sel'))}</option>${pf.tipos.map(x=>`<option value="${esc(x[0])}" ${x[0]===pr.tipo?'selected':''}>${esc(x[LANG==='es'?0:1])}</option>`).join('')}</select></div>${pr.ambito==='otro'?`<div class="field"><label for="pOtro">${esc(t('amb.otro'))}</label><input type="text" id="pOtro" data-perf="otro" value="${esc(pr.otro)}" placeholder="${esc(t('amb.otroph'))}"></div>`:''}</div>`:'';
+}
+[['pTit','titulacion'],['pCentro','centro'],['pNombre','nombre'],['pTutor','tutor']].forEach(([id,k])=>$(id).setAttribute('data-perf',k));
+$('pNivel').setAttribute('data-perf','nivel');$('pIdioma').setAttribute('data-perf','idiomaTutor');
+
+/* ── pantalla 3: hipótesis ── */
+function pintaHip(){const h=perfilAct().hip;$('hipNota').textContent=P.perfil.ambito?t('hip.'+h):''}
+
+/* ── pantalla 5: revisiones ── */
+const fmtF=iso=>new Date(iso).toLocaleString(LANG==='es'?'es-ES':'en-GB',{dateStyle:'medium',timeStyle:'short'});
+function pintaRev(){
+  $('revList').innerHTML=P.rev.length?P.rev.map(r=>`<div class="card"><div class="mt-rh"><h3>${esc(t('rev.h'))}: ${esc(r.seccion||t('rev.sin'))}</h3><small class="muted">${esc(fmtF(r.t))} · ${esc(t('rev.pal',r.palabras))}</small></div><details><summary>${esc(LANG==='es'?'Ver mi texto':'See my text')}</summary><p class="mt-quote">${esc(r.texto)}</p></details><div class="mt-md">${md(r.feedback)}</div>${refsNota(r.feedback)}</div>`).join(''):`<div class="card"><p class="empty">${esc(t('rev.vacio'))}</p></div>`;
+}
+/* ── pantalla 6: defensa ── */
+function pintaDef(){
+  const pf=perfilAct(),en=DEF_EN[pf.id]||[];
+  $('defTipo').innerHTML=`<option value="mix">${esc(t('def.mix'))}</option>`+pf.defensa.map((d,i)=>`<option value="${esc(d)}">${esc(LANG==='es'?d:en[i]||d)}</option>`).join('');
+  $('defList').innerHTML=P.def.length?P.def.map((d,i)=>`<div class="card"><div class="mt-rh"><h3>${esc(t('def.pregN',P.def.length-i))}</h3><small class="muted">${esc(fmtF(d.t))}</small></div><p class="mt-q"><b>${esc(d.preg)}</b></p>${d.eval?`<p class="mt-quote"><i>${esc(t('def.resp'))}:</i> ${esc(d.resp)}</p><h4 class="mt-h4">${esc(t('def.eval'))}</h4><div class="mt-md">${md(d.eval)}</div>${refsNota(d.eval)}`:`<div class="field"><label>${esc(t('def.resp'))}</label><textarea rows="6" data-defresp="${d.id}">${esc(d.resp)}</textarea></div><button class="btn btn-primary" type="button" data-anal="${d.id}">${ico('sparkles')}${esc(t('def.analiza'))}</button>`}</div>`).join(''):`<div class="card"><p class="empty">${esc(t('def.vacio'))}</p></div>`;
+}
+$('btnRev').onclick=pideRevision;$('btnDef').onclick=pidePreguntaTribunal;
+document.addEventListener('click',e=>{const a=e.target.closest('[data-anal]');if(a)analizaRespuesta(a.dataset.anal)});
+document.addEventListener('input',e=>{const r=e.target.closest('[data-defresp]');if(r){const d=P.def.find(x=>x.id===r.dataset.defresp);if(d){d.resp=r.value;guarda()}}});
+
+/* ── pantalla 7: progreso, autoría, referencias y uso ── */
+const miniProg=()=>{$('miniProg').textContent=`${progreso()}/8`};
+async function pintaInforme(){
+  const hs=HITOS.map(([k,f])=>[k,f()]);
+  $('panelProg').innerHTML=`<div class="card"><h3>${esc(t('prog.h'))} · ${esc(t('prog.de',progreso(),8))}</h3><div class="mt-pbar"><i style="width:${progreso()/8*100}%"></i></div><ul class="mt-hitos">${hs.map(([k,ok])=>`<li class="${ok?'ok':''}"><span>${ok?'✓':'○'}</span>${esc(t('hit.'+k))}</li>`).join('')}</ul></div>`;
+  const claves=Object.keys(P.dec).filter(k=>P.dec[k].valor?.trim()),order=Object.keys(DECROWS);claves.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  const filas=[];for(const k of claves){const d=P.dec[k],s=await estadoDec(k);filas.push(`<tr><td><b>${esc(t('dec.'+k+'.s'))}</b></td><td>${esc(d.valor.length>180?d.valor.slice(0,180)+'…':d.valor)}</td><td>${d.ok?`<span class="mt-chip o-${d.origen}">${esc(t('orig.'+d.origen))}</span>`:'—'}</td><td>${esc(t(d.ok?(s==='ok'?'st.ok':'st.mod'):'st.pend'))}</td></tr>`)}
+  const cnt=o=>claves.filter(k=>P.dec[k].ok&&P.dec[k].origen===o).length,hok=await verificaHist();
+  $('panelAutoria').innerHTML=claves.length?`<p><b>${esc(t('aut.resumen',cnt('propia'),cnt('ia-editada'),cnt('ia-elegida')))}</b></p><div class="table-wrap"><table><thead><tr><th>${esc(t('aut.dec'))}</th><th>${esc(t('aut.valor'))}</th><th>${esc(t('aut.origen'))}</th><th>${esc(t('aut.estado'))}</th></tr></thead><tbody>${filas.join('')}</tbody></table></div><p class="help">${esc(t('aut.hist'))}: <b class="${hok?'ok':'mt-bad'}">${esc(hok?t('aut.histok',P.hist.length):t('aut.histko'))}</b></p>`:`<p class="empty">${esc(t('aut.vacio'))}</p>`;
+  $('panelRefs').innerHTML=P.refs.length?`<div class="table-wrap"><table><thead><tr><th>${esc(t('ref.tipo'))}</th><th>${esc(t('ref.ref'))}</th><th>${esc(t('ref.est'))}</th><th>${esc(t('ref.fase'))}</th></tr></thead><tbody>${P.refs.map(r=>`<tr><td>${esc(t('ref.'+r.k))}</td><td>${esc(r.t)}</td><td>${r.k==='doi'?(r.e==='si'?`<span class="mt-chip ok">${esc(t('ref.si'))}</span> ${esc((r.tit||'').slice(0,90))}`:r.e==='no'?`<span class="mt-chip aviso">${esc(t('ref.no'))}</span>`:r.e==='pend'?esc(t('ref.pend')):`<span class="mt-chip">${esc(t('ref.q'))}</span>`):`<span class="mt-chip">${esc(t('ref.comprobar'))}</span>`}</td><td>${esc(t('fase.'+r.fase))}</td></tr>`).join('')}</tbody></table></div>${P.refs.some(r=>r.k==='doi'&&r.e!=='si'&&r.e!=='no')?`<div class="actions"><button class="btn btn-ghost btn-sm" id="btnRecheck">${esc(t('ref.recheck'))}</button></div>`:''}`:`<p class="empty">${esc(t('ref.vacio'))}</p>`;
+  const por={};P.uso.forEach(u=>{por[u.fase]=(por[u.fase]||0)+1});const provs=[...new Set(P.uso.map(u=>PROV[u.prov]?.n+' · '+u.modelo))].join(', ');
+  $('panelUso').innerHTML=P.uso.length?`<p><b>${esc(t('uso.h',P.uso.length,provs))}</b></p><div class="table-wrap"><table><thead><tr><th>${esc(t('uso.fase'))}</th><th>${esc(t('uso.n'))}</th></tr></thead><tbody>${Object.entries(por).map(([f,n])=>`<tr><td>${esc(t('fase.'+f))}</td><td>${n}</td></tr>`).join('')}</tbody></table></div><p class="help">${esc(t('uso.nota'))}</p>`:`<p class="empty">${esc(t('uso.sin'))}</p>`;
+  $('decl').value=P.decl;
+}
+document.addEventListener('click',async e=>{if(e.target.closest('#btnRecheck')){for(const r of P.refs.filter(x=>x.k==='doi'&&x.e!=='si'&&x.e!=='no')){const v=await verificaDOI(r.t);r.e=v.e;r.tit=v.tit}guarda();pintaInforme()}});
+$('decl').addEventListener('input',e=>{P.decl=e.target.value;guarda()});
+$('btnDecl').onclick=()=>{
+  if(!P.uso.length){$('decl').value=t('decl.nada');P.decl=$('decl').value;guarda();return}
+  const fases=[...new Set(P.uso.map(u=>u.fase))].map(f=>t('fase.'+f)).join(', '),provs=[...new Set(P.uso.map(u=>PROV[u.prov]?.n+' '+u.modelo))].join(', ');
+  $('decl').value=t('decl.borrador',provs,t('decl.fases',fases),P.uso.length);P.decl=$('decl').value;guarda();
+};
+
+/* ── chat ── */
+function pintaChat(pensando){
+  const m=P.chat.map(x=>`<div class="mt-msg ${x.role}"><b>${esc(x.role==='user'?t('chat.tu'):t('chat.tutor'))}</b>${x.role==='user'?`<p>${esc(x.content)}</p>`:md(x.content)}</div>`).join('');
+  $('chatMsgs').innerHTML=(m||`<p class="mt-vacio">${esc(t('chat.vacio'))}</p>`)+(pensando?`<div class="mt-msg assistant"><span class="spin"></span> ${esc(t('thinking'))}</div>`:'');
+  $('chatMsgs').scrollTop=1e9;$('chatSend').disabled=!!pensando;
+}
+$('fabChat').onclick=()=>{$('chatPanel').hidden=false;pintaChat(false);$('chatIn').focus()};$('chatX').onclick=()=>{$('chatPanel').hidden=true};
+$('chatSend').onclick=enviaChat;$('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviaChat()}});
+
+/* ── repintado general ── */
+function pintaTodo(){
+  document.querySelector('#ejNota')?.remove();
+  if(step===0){const hay=P.fuentes||P.dec.tema||P.dec.intereses||P.perfil.ambito;$('inicioProj').innerHTML=hay?t('inicio.cont',esc(D('tema')||P.perfil.titulacion||t('inicio.cont0'))):'';
+    $('fasesHero').innerHTML=ta('fase.titulos').map((x,i)=>`<div class="mt-fase"><span class="mt-n">${i+1}</span><div><b>${esc(x)}</b><small>${esc(ta('fase.desc')[i])}</small></div></div>`).join('')}
+  if(step===1)pintaPerfil();if(step===3)pintaHip();if(step===5)pintaRev();if(step===6)pintaDef();if(step===7)pintaInforme();
+  pintaOuts();miniProg();
+  if(P.ejemplo&&step>0&&step<8)$('app').insertAdjacentHTML('afterbegin',`<div class="aviso" id="ejNota">${esc(t('ejemplo.nota'))} <button class="btn btn-ghost btn-sm" id="btnNuevoDesdeEj" type="button">${esc(t('ejemplo.btn'))}</button></div>`);
+  if(!$('chatPanel').hidden)pintaChat(false);
+}
+document.addEventListener('click',e=>{if(e.target.closest('#btnNuevoDesdeEj')){P=nuevoP();guarda();go(1)}if(e.target.id==='btnCont'){go(P.informe?7:HITOS.findIndex(([,f])=>!f())+1||7)}});
+
+/* ══════════ AJUSTES DE IA ══════════ */
+const KPH={openai:'sk-proj-…',gemini:'AIza…',anthropic:'sk-ant-…'};
+function cargaIA(){const pv=getProv();$('selProv').value=pv;$('apiKey').value=getKey(pv);$('apiKey').placeholder=KPH[pv];$('modelo').value=getMod(pv);let ml=[];try{ml=JSON.parse(localStorage.getItem('mt_models_'+pv)||'[]')}catch{}$('modelos').innerHTML=[...new Set([PROV[pv].m,...ml])].map(m=>`<option value="${esc(m)}">`).join('')}
+$('btnIA').onclick=()=>{cargaIA();$('mIA').classList.add('on')};
+$('selProv').onchange=()=>{localStorage.setItem('mt_prov',$('selProv').value);cargaIA()};
+$('apiKey').oninput=()=>localStorage.setItem(PROV[getProv()].k,$('apiKey').value.trim());
+$('modelo').oninput=()=>localStorage.setItem('mt_model_'+getProv(),$('modelo').value.trim()||PROV[getProv()].m);
+$('btnEye').onclick=()=>{const k=$('apiKey');k.type=k.type==='password'?'text':'password'};
+$('btnModelos').onclick=async()=>{const st=$('iaEstado'),pv=getProv();st.textContent='…';try{const l=await listaModelos(pv);localStorage.setItem('mt_models_'+pv,JSON.stringify(l));$('modelos').innerHTML=l.map(m=>`<option value="${esc(m)}">`).join('');st.textContent=`${l.length} ${LANG==='es'?'modelos disponibles en tu clave; escribe o elige uno.':'models available on your key; type or pick one.'}`}catch(e){st.textContent=e.message}};
+$$('.modal').forEach(m=>m.addEventListener('click',ev=>{if(ev.target===m||ev.target.hasAttribute('data-close'))m.classList.remove('on')}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$$('.modal.on').forEach(m=>m.classList.remove('on'));$('chatPanel').hidden=true}});
+$('btnHelp').onclick=()=>$('mHelp').classList.add('on');
+
+/* ══════════ EXPORTAR E IMPORTAR EL PROYECTO ══════════ */
+const APPV='1.0.0';
+async function exportaJSON(){
+  const huella=await sha256(canon(P));
+  dl(`mentoria_${slug(P.perfil.nombre||P.dec.tema?.valor||'proyecto')}.json`,JSON.stringify({formato:'mentoria/1',app:APPV,exportado:iso(),proyecto:P,integridad:{huella}},null,1),'application/json');
+}
+$('btnJson').onclick=exportaJSON;
+$('impJson').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const j=JSON.parse(await f.text());if(j.formato!=='mentoria/1'||!j.proyecto?.perfil)throw new Error(t('imp.bad'));
+    if(!confirm(t('imp.conf')))return;const ok=j.integridad?.huella===await sha256(canon(j.proyecto));
+    P={...nuevoP(),...j.proyecto};guarda();go(7);toast(ok?t('imp.ok'):t('imp.hash'),ok?3000:8000);
+  }catch(err){toast(err.message||t('imp.bad'),6000)}
+};
+$('btnBorrar').onclick=()=>{if(!confirm(t('borrar.conf')))return;P=nuevoP();guarda();go(0)};
+
+/* ══════════ INFORME PARA EL TUTOR (Word) ══════════ */
+async function informeWord(){
+  await cargaLib(['https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js']);const X=window.docx;
+  const pr=P.perfil,pf=perfilAct(),hok=await verificaHist(),huella=await sha256(canon(P));
+  const Pa=(tx,o={})=>new X.Paragraph({heading:o.h,alignment:o.c?X.AlignmentType.CENTER:undefined,spacing:{after:o.after??100},children:[new X.TextRun({text:String(tx??''),font:'Arial',size:o.s||21,bold:o.b,italics:o.i,color:o.col})]});
+  const bd={style:X.BorderStyle.SINGLE,size:1,color:'C7D2DC'},cell=(tx,o={})=>new X.TableCell({borders:{top:bd,bottom:bd,left:bd,right:bd},shading:o.h?{fill:'0F2237',type:X.ShadingType.CLEAR}:undefined,width:o.w?{size:o.w,type:X.WidthType.PERCENTAGE}:undefined,children:String(tx??'').split('\n').slice(0,40).map(l=>new X.Paragraph({children:[new X.TextRun({text:l,font:'Arial',size:18,bold:o.h||o.b,color:o.h?'FFFFFF':undefined})]}))});
+  const tabla=(head,rows,w)=>new X.Table({width:{size:100,type:X.WidthType.PERCENTAGE},rows:[new X.TableRow({children:head.map((h,i)=>cell(h,{h:true,w:w[i]}))}),...rows.map(r=>new X.TableRow({children:r.map((c,i)=>cell(c,{w:w[i]}))}))]});
+  const k=[Pa('MentorIA',{c:true,b:true,col:'E4572E',s:20}),Pa(t('rp.titulo'),{c:true,b:true,s:34}),Pa(D('tema')||pr.titulacion||'',{c:true,col:'5D7691',s:22,after:240})];
+  k.push(tabla([t('rp.estudiante'),''],[[t('rp.estudiante'),pr.nombre||'—'],[t('rp.tutor'),pr.tutor||'—'],[t('rp.titulacion'),`${pr.titulacion||'—'} (${pr.centro||'—'})`],[t('rp.ambito'),pr.ambito==='otro'&&pr.otro?pr.otro:pf.n[LANG]],[t('rp.nivel'),`${pr.nivel}${pr.tipo?' · '+pr.tipo:''}`],[t('rp.fecha'),new Date().toLocaleDateString(LANG==='es'?'es-ES':'en-GB')]].map(r=>r),[28,72]));
+  k.push(Pa(t('rp.prog')+` — ${t('prog.de',progreso(),8)}`,{h:X.HeadingLevel.HEADING_1}));HITOS.forEach(([h,f])=>k.push(Pa(`${f()?'✓':'○'}  ${t('hit.'+h)}`,{col:f()?'0E8C7A':'8899AA'})));
+  k.push(Pa(t('rp.dec'),{h:X.HeadingLevel.HEADING_1}));
+  const ord=Object.keys(DECROWS),claves=Object.keys(P.dec).filter(c=>P.dec[c].valor?.trim()).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b)),filas=[];
+  for(const c of claves){const d=P.dec[c],s=await estadoDec(c);filas.push([t('dec.'+c+'.s'),d.valor,d.ok?t('orig.'+d.origen):t('st.pend'),d.ok?(s==='ok'?t('st.ok'):t('rp.modificado')):t('st.pend')])}
+  k.push(filas.length?tabla([t('aut.dec'),t('aut.valor'),t('aut.origen'),t('aut.estado')],filas,[20,52,16,12]):Pa(t('aut.vacio'),{i:true}));
+  const cnt=o=>claves.filter(c=>P.dec[c].ok&&P.dec[c].origen===o).length;k.push(Pa(t('rp.autoria')+': '+t('aut.resumen',cnt('propia'),cnt('ia-editada'),cnt('ia-elegida')),{i:true,s:19,col:'5D7691'}));
+  k.push(Pa(t('rp.rev'),{h:X.HeadingLevel.HEADING_1}));
+  if(!P.rev.length)k.push(Pa(t('rp.sinRev'),{i:true}));else P.rev.slice().reverse().forEach(r=>{k.push(Pa(`${r.seccion||t('rev.sin')} — ${fmtF(r.t)} — ${t('rev.pal',r.palabras)}`,{b:true}));r.feedback.split('\n').filter(l=>l.trim()).forEach(l=>k.push(Pa(l.replace(/[*#`]/g,''),{s:19,after:40})))});
+  k.push(Pa(t('rp.def'),{h:X.HeadingLevel.HEADING_1}));
+  if(!P.def.length)k.push(Pa(t('rp.sinDef'),{i:true}));else P.def.slice().reverse().forEach((d,i)=>{k.push(Pa(`${t('rp.pregunta')} ${i+1}: ${d.preg}`,{b:true}));if(d.resp)k.push(Pa(`${t('rp.respuesta')}: ${d.resp}`));if(d.eval){k.push(Pa(t('rp.analisis')+':',{b:true,s:19,after:40}));d.eval.split('\n').filter(l=>l.trim()).forEach(l=>k.push(Pa(l.replace(/[*#`]/g,''),{s:19,after:40})))}});
+  k.push(Pa(t('rp.refs'),{h:X.HeadingLevel.HEADING_1}));
+  k.push(P.refs.length?tabla([t('ref.tipo'),t('ref.ref'),t('ref.est')],P.refs.map(r=>[t('ref.'+r.k),r.t,r.k==='doi'?(r.e==='si'?t('ref.si'):r.e==='no'?t('ref.no'):t('ref.q')):t('ref.comprobar')]),[16,56,28]):Pa(t('rp.sinRefs'),{i:true}));
+  k.push(Pa(t('rp.uso'),{h:X.HeadingLevel.HEADING_1}));
+  const por={};P.uso.forEach(u=>{por[u.fase]=(por[u.fase]||0)+1});const provs=[...new Set(P.uso.map(u=>PROV[u.prov]?.n+' · '+u.modelo))].join(', ');
+  k.push(Pa(P.uso.length?t('uso.h',P.uso.length,provs):t('uso.sin')));if(P.uso.length)k.push(tabla([t('uso.fase'),t('uso.n')],Object.entries(por).map(([f,n])=>[t('fase.'+f),String(n)]),[70,30]));
+  k.push(Pa(t('rp.decl'),{h:X.HeadingLevel.HEADING_1}));k.push(Pa(P.decl.trim()||t('rp.sinDecl'),{i:!P.decl.trim()}));
+  k.push(Pa(t('rp.integ'),{h:X.HeadingLevel.HEADING_1}));k.push(Pa(`${t('aut.hist')}: ${hok?t('aut.histok',P.hist.length):t('aut.histko')}`));k.push(Pa(`${t('rp.huella')}: ${huella}`,{s:16,col:'5D7691'}));
+  k.push(Pa(t('rp.nota'),{i:true,s:16,col:'8899AA'}));
+  P.informe=true;guarda();
+  return X.Packer.toBlob(new X.Document({creator:'MentorIA',sections:[{children:k}]}));
+}
+$('btnWord').onclick=async()=>{try{toast('…');dl(`informe_mentoria_${slug(P.perfil.nombre||D('tema')||'proyecto')}.docx`,await informeWord());pintaInforme();miniProg()}catch(e){toast(e.message,7000)}};
+
+/* ══════════ PROYECTO DE EJEMPLO ══════════ */
+async function cargaEjemplo(){
+  const es=LANG==='es';P=nuevoP();P.ejemplo=true;
+  const E=es?{
+    perfil:{nombre:'Estudiante de ejemplo',titulacion:'Grado en Derecho y ADE (ejemplo)',nivel:'TFG',tutor:'Tutor/a de ejemplo',idiomaTutor:'Español',ambito:'derecho',tipo:'Análisis jurídico de una institución o norma'},
+    int:'Me interesa la tributación de las nuevas formas de trabajo y de negocio digital, en especial la economía colaborativa.',exp:'He cursado Derecho Financiero y Tributario y he trabajado un verano en una gestoría.',
+    tema:'La tributación en el IRPF de los ingresos obtenidos a través de plataformas de economía colaborativa',prob:'No está claro cómo se califican esos ingresos (actividad económica o rendimientos de capital) ni qué obligaciones tiene quien los percibe.',fuera:'No trataré el IVA ni la imposición de las propias plataformas; tampoco el derecho comparado.',
+    preg:'¿Cómo deben calificarse a efectos del IRPF los ingresos de las personas que ofrecen servicios a través de plataformas digitales, y qué criterios permiten distinguirlos?',og:'Analizar los criterios de calificación de los ingresos obtenidos a través de plataformas colaborativas en el IRPF.',oe:'1. Delimitar el concepto de actividad económica en el IRPF.\n2. Identificar los criterios que usa la doctrina administrativa para distinguirla de otros rendimientos.\n3. Examinar los deberes formales y de información de las personas contribuyentes.\n4. Proponer posibles mejoras de claridad normativa.',
+    met:'Método dogmático-jurídico: análisis de la normativa, la doctrina administrativa y la jurisprudencia, con apoyo de la doctrina científica.',fue:'Normativa tributaria vigente, consultas vinculantes y resoluciones administrativas, jurisprudencia y doctrina científica. Buscaré en los boletines oficiales y en bases de datos jurídicas.',ind:'1. Introducción y justificación\n2. Marco normativo del IRPF\n3. Calificación de los ingresos de las plataformas\n4. Obligaciones formales\n5. Propuestas de mejora\n6. Conclusiones',
+    analisis:'## Áreas de interés\n- Tributación de la economía digital.\n- Calificación de rentas en el IRPF.\n\n## Preguntas para concretar\n1. ¿Te interesa más el análisis de la norma o la propuesta de reforma?\n2. ¿Qué plataformas o actividades concretas conoces?',
+    lineas:[{titulo:'La tributación en el IRPF de los ingresos obtenidos a través de plataformas de economía colaborativa',problema:'Incertidumbre sobre la calificación de las rentas.',pregunta:'¿Cómo deben calificarse esas rentas?',cuestiones:['Concepto de actividad económica','Deberes formales'],dificultades:['Doctrina administrativa dispersa']},{titulo:'Obligaciones de información de las plataformas digitales',problema:'Alcance de los deberes de información.',pregunta:'¿Qué deben comunicar las plataformas?',cuestiones:['Alcance subjetivo'],dificultades:['Normativa cambiante']}],
+    rev:{seccion:'Introducción',texto:'La economía colaborativa ha crecido de forma notable en los últimos años y plantea retos al sistema tributario porque las rentas que genera no siempre encajan con las categorías clásicas del impuesto. En este trabajo se analizará cómo calificar esas rentas en el IRPF.',fb:'## Claridad\nLa idea principal se entiende. **Pregunta para ti:** ¿qué significa «no siempre encajan»? Concreta un ejemplo.\n\n## Argumentación\nAfirmas que ha crecido «de forma notable»: ¿en qué datos o fuentes te apoyarás?\n\n## Acciones\n1. Define el alcance con una frase.\n2. Identifica qué fuente respaldará cada afirmación.'},
+    def:{preg:'Si la Administración calificase estos ingresos de otro modo, ¿cambiaría la propuesta de mejora que defiendes?',resp:'Sí cambiaría en parte, porque mi propuesta se basa en que el criterio actual es poco claro; si la calificación fuera distinta, me centraría en los deberes formales, que seguirían siendo un problema práctico.',ev:'## Bien planteado\nReconoces la dependencia de tu propuesta respecto del criterio de calificación.\n\n## Puede desarrollarse\nExplica qué parte de la propuesta sobrevive y por qué.\n\n## Preguntas de seguimiento\n¿Qué impacto tendría para el contribuyente?'}
+  }:{
+    perfil:{nombre:'Example student',titulacion:'BSc in Environmental Sciences (example)',nivel:'TFG',tutor:'Example tutor',idiomaTutor:'English',ambito:'experimentales',tipo:'Experimental work'},
+    int:'I am interested in water saving in agriculture and in how soil management can help Mediterranean crops cope with drought.',exp:'I took soil science and statistics, and I helped in a university field plot last spring.',
+    tema:'Effect of organic mulch on soil moisture in a Mediterranean vegetable plot',prob:'It is unclear how much organic mulch reduces water loss compared with bare soil under local conditions.',fuera:'I will not study yield or economic cost, nor other mulch materials.',
+    preg:'Does organic mulch increase soil moisture retention compared with bare soil in a Mediterranean vegetable plot during the dry season?',og:'Compare soil moisture between mulched and bare plots during the dry season.',oe:'1. Design a plot layout with replicates.\n2. Measure soil moisture at fixed intervals.\n3. Analyse differences with an appropriate statistical test.\n4. Discuss limitations and practical implications.',
+    met:'Field experiment with two treatments (mulch and control), four replicates and repeated measures, analysed with a mixed model.',fue:'Peer-reviewed articles on mulching and soil water, standards for soil moisture measurement, and local climate data. I will search scientific databases and national weather services.',ind:'1. Introduction and hypothesis\n2. Materials and methods\n3. Results\n4. Discussion\n5. Conclusions',
+    analisis:'## Areas of interest\n- Soil water management.\n- Drought adaptation.\n\n## Questions to narrow down\n1. Do you prefer field work or a literature review?\n2. Which crops do you have access to?',
+    lineas:[{titulo:'Effect of organic mulch on soil moisture in a Mediterranean vegetable plot',problema:'Uncertain water savings.',pregunta:'Does mulch increase moisture retention?',cuestiones:['Plot design','Measurement method'],dificultades:['Short season']},{titulo:'Soil moisture sensors: accuracy of low-cost devices',problema:'Cost versus accuracy.',pregunta:'How accurate are cheap sensors?',cuestiones:['Calibration'],dificultades:['Equipment access']}],
+    rev:{seccion:'Introduction',texto:'Water scarcity is a growing problem in Mediterranean agriculture and soil management practices can help to reduce losses. In this work I will compare mulched and bare soil to see whether moisture is retained longer during the dry season.',fb:'## Clarity\nThe aim is clear. **Question for you:** what do you mean by "retained longer"? Define the measure.\n\n## Argument\nYou state water scarcity is "growing": which sources will support that?\n\n## Actions\n1. Define the main variable in one sentence.\n2. Decide which source supports each claim.'},
+    def:{preg:'What would you do if the control plot had been shaded by a neighbouring tree?',resp:'I would record it as a confounding factor and, if possible, move the sensors or include shading as a covariate, because otherwise the difference could be due to light rather than mulch.',ev:'## Well stated\nYou identify shading as a confounder.\n\n## Could be developed\nExplain how you would detect it beforehand.\n\n## Follow-up questions\nHow would the replicates help here?'}
+  };
+  Object.assign(P.perfil,E.perfil);
+  P.out.analisis={texto:E.analisis,t:iso()};P.out.lineas={json:{lineas:E.lineas},t:iso()};
+  const set=async(k,v)=>{const o=origenDe(v);P.dec[k]={valor:v,ok:true,origen:o,t:iso()};await anota(k,v,o)};
+  await set('intereses',E.int);await set('experiencia',E.exp);await set('tema',E.tema);await set('problema',E.prob);await set('fuera',E.fuera);await set('pregunta',E.preg);await set('objGeneral',E.og);await set('objEsp',E.oe);await set('metodo',E.met);await set('fuentes',E.fue);await set('indice',E.ind);
+  P.rev=[{id:uid('r'),t:iso(),seccion:E.rev.seccion,palabras:wc(E.rev.texto),texto:E.rev.texto,feedback:E.rev.fb}];
+  P.def=[{id:uid('d'),t:iso(),tipo:'',preg:E.def.preg,resp:E.def.resp,eval:E.def.ev}];
+  P.uso=['inicio','tema','pregunta','diseno','revision','defensa'].map(f=>({t:iso(),fase:f,tipo:f,prov:'openai',modelo:'example',chars:900}));
+  P.decl=es?'Ejemplo: he usado un tutor virtual para orientarme en cada fase. Las decisiones y el texto son míos.':'Example: I used a virtual tutor for guidance in each phase. The decisions and the text are mine.';
+  guarda();go(1);
+}
+$('btnEjemplo').onclick=cargaEjemplo;
+
+/* ══════════ ARRANQUE ══════════ */
+(async()=>{
+  aplicaIdioma();const p=await cargaP();if(p){P={...nuevoP(),...p,perfil:{...nuevoP().perfil,...p.perfil}}}
+  go(0);
+})();
+</script>
+</body></html>
