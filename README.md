@@ -42,8 +42,10 @@ Fernando Borrás Rocher e Irene Martínez Quiles · Universidad Miguel Hernánde
 
 ## Cómo citar
 
-Borrás Rocher, F. y Martínez Quiles, I. (2026). *MentorIA* (v1.0.0) [Software]. Universidad Miguel Hernández de Elche. DOI: [10.5281/zenodo.23099577](https://doi.org/10.5281/zenodo.23099577)
+Borrás Rocher, F. y Martínez Quiles, I. (2026). *MentorIA* (v1.0.1) [Software]. Universidad Miguel Hernández de Elche. DOI: [10.5281/zenodo.23099577](https://doi.org/10.5281/zenodo.23099577)
 
 ## Licencia
 
 MIT. Véase [LICENSE](LICENSE).
+
+ORCID: Fernando Borrás Rocher [0000-0002-5519-4573](https://orcid.org/0000-0002-5519-4573) · Irene Martínez Quiles [0009-0009-9572-9585](https://orcid.org/0009-0009-9572-9585)
